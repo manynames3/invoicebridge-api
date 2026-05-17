@@ -4,6 +4,8 @@ InvoiceBridge API is a production-style FastAPI backend that accepts normalized 
 
 This is a portfolio MVP, not a certified e-invoicing gateway. The Belgium/Peppol implementation is intentionally sandboxed and mock-routed.
 
+Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev)
+
 ## About
 
 The project models the core workflow of an e-invoicing compliance provider:
@@ -98,6 +100,7 @@ app/
 docs/
   adrs/              architecture decision records
 examples/            sample Belgium invoice payloads and curl commands
+site/                static sales landing page deployed to Cloudflare Pages
 tests/               pytest coverage for validation, transform, send, audit
 ```
 
@@ -207,12 +210,14 @@ CI runs the same ruff, mypy, and pytest checks on GitHub Actions.
 
 ## Deployment
 
-The included deployment model is Docker Compose:
+The API deployment model included in this repository is Docker Compose:
 
 - `api`: FastAPI/Uvicorn application container.
 - `db`: PostgreSQL 16 with a health check and persistent volume.
 
 For production, the API should run migrations explicitly with Alembic, disable automatic table creation, terminate TLS at the platform edge or gateway, and source secrets from the deployment environment.
+
+The public sales landing page is a static site in `site/` and is deployed separately on Cloudflare Pages at [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev).
 
 ## Data Retention And Audit Trail
 
