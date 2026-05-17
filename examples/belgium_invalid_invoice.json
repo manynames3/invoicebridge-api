@@ -1,0 +1,30 @@
+{
+  "country": "BE",
+  "transaction_type": "B2B",
+  "invoice_number": "INV-BE-2026-BAD",
+  "issue_date": "2026-01-15",
+  "currency": "EUR",
+  "seller": {
+    "name": "Acme Belgium BV",
+    "vat_id": "BADVAT"
+  },
+  "buyer": {
+    "name": "Globex Belgium NV",
+    "vat_id": "BE0987654321"
+  },
+  "lines": [
+    {
+      "description": "Incorrect line",
+      "quantity": "1",
+      "unit_price": "100.00",
+      "vat_rate": "17",
+      "line_extension_amount": "150.00"
+    }
+  ],
+  "totals": {
+    "tax_exclusive_amount": "150.00",
+    "tax_amount": "0.00",
+    "tax_inclusive_amount": "150.00",
+    "payable_amount": "150.00"
+  }
+}
