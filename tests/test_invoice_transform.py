@@ -84,3 +84,33 @@ def test_create_invoice_from_scratch_generates_valid_transform(
     body = response.json()
     assert body["status"] == "transformed"
     assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+
+
+def test_transform_germany_invoice_uses_xrechnung_like_format(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/transform", json=germany_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "transformed"
+    assert body["format"] == "XRECHNUNG_EN16931_UBL_LIKE"
+    assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert "XRechnung/EN 16931" in body["xml_preview"]
+
+
+def test_transform_spain_invoice_uses_local_fiscal_record_format(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/transform", json=spain_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "transformed"
+    assert body["format"] == "NON_VERIFACTU_FISCAL_RECORD_XML_LIKE"
+    assert "InvoiceBridgeFiscalRecord" in body["xml_preview"]
+    assert "CurrentRecordHash" in body["xml_preview"]

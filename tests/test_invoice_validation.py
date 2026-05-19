@@ -52,3 +52,72 @@ def test_missing_document_totals_are_not_compliant(
     body = response.json()
     assert body["compliant"] is False
     assert {error["code"] for error in body["errors"]} == {"MISSING_TOTALS"}
+
+
+def test_germany_invoice_validates_without_buyer_routing_id(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/validate", json=germany_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is True
+    assert body["errors"] == []
+    assert body["required_format"] == "XRECHNUNG_EN16931_UBL_LIKE"
+    assert body["country_profile_used"] == "DE_B2B_EN16931_MVP"
+    assert body["metadata"]["delivery_network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
+
+
+def test_germany_invoice_rejects_unsupported_vat_rate(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    invoice = dict(germany_invoice)
+    invoice["lines"] = [dict(germany_invoice["lines"][0])]
+    invoice["lines"][0]["vat_rate"] = "21"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_VAT_RATE" in {error["code"] for error in body["errors"]}
+
+
+def test_spain_invoice_validates_and_keeps_local_record_metadata(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/validate", json=spain_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is True
+    assert body["errors"] == []
+    assert body["warnings"] == []
+    assert body["required_format"] == "NON_VERIFACTU_FISCAL_RECORD_XML_LIKE"
+    assert body["country_profile_used"] == "ES_B2B_NON_VERIFACTU_MVP"
+    assert body["metadata"]["delivery_model"] == "local_fiscal_record_no_network"
+
+
+def test_spain_invoice_warns_when_fiscal_record_chain_metadata_is_missing(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    invoice = dict(spain_invoice)
+    invoice["metadata"] = {}
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is True
+    assert {warning["code"] for warning in body["warnings"]} == {
+        "MISSING_PREVIOUS_RECORD_HASH",
+        "MISSING_SOFTWARE_SYSTEM_ID",
+    }

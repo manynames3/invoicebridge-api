@@ -1,8 +1,8 @@
 # InvoiceBridge API
 
-InvoiceBridge API is a production-style FastAPI backend that accepts normalized invoice JSON, checks a Belgium B2B Peppol-style mandate profile, validates totals and tax rules, transforms valid invoices into sandbox UBL-like XML, simulates network submission, tracks status, and stores an audit trail. It is designed as a B2B infrastructure API for ERP, accounting SaaS, billing platforms, marketplaces, and cross-border sellers that need e-invoicing compliance workflows without replacing their existing invoice system.
+InvoiceBridge API is a production-style FastAPI backend that accepts normalized invoice JSON, selects a country mandate profile, validates totals and tax rules, transforms valid invoices into sandbox structured outputs, simulates routing or local evidence recording, tracks status, and stores an audit trail. It is designed as a B2B infrastructure API for ERP, accounting SaaS, billing platforms, marketplaces, and cross-border sellers that need e-invoicing compliance workflows without replacing their existing invoice system.
 
-This is a portfolio MVP, not a certified e-invoicing gateway. The Belgium/Peppol implementation is intentionally sandboxed and mock-routed.
+This is a portfolio MVP, not a certified e-invoicing gateway. The Belgium, Germany, and Spain profiles are intentionally sandboxed and do not perform official network or tax-authority submission.
 
 Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev)
 
@@ -10,9 +10,9 @@ Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-a
 
 The project models the core workflow of an e-invoicing compliance provider:
 
-Existing invoice JSON -> mandate profile -> validation -> UBL-like transformation -> mock Peppol routing -> status tracking -> audit evidence.
+Existing invoice JSON -> mandate profile -> validation -> structured transformation -> mock routing or local evidence record -> status tracking -> audit evidence.
 
-The first supported profile is `BE_B2B_PEPPOL_MVP`, a Belgium B2B profile inspired by Peppol BIS Billing 3.0. The code is structured so future country profiles such as Poland KSeF or a real Peppol access point can be added behind the same validation, transformation, provider, and audit boundaries.
+The supported MVP profiles are Belgium B2B Peppol-style, Germany EN 16931/XRechnung-style, and Spain NON-VERI*FACTU-style local fiscal-record evidence. The code is structured so future country profiles such as Poland KSeF or a real Peppol access point can be added behind the same validation, transformation, provider, and audit boundaries.
 
 Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhost:8000/docs) after starting the API.
 
@@ -31,8 +31,10 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 
 - Modular country/profile design with validator, transformer, and provider registries.
 - Belgium B2B validation for required parties, VAT IDs, buyer routing ID, supported currency, allowed VAT rates, line totals, tax totals, and payable total consistency.
-- UBL-like XML generation using structured XML APIs instead of string assembly.
-- Provider abstraction with deterministic `MockPeppolProvider` submission outcomes.
+- Germany B2B no-network validation for German VAT IDs, EUR invoices, EN 16931/XRechnung-style output, and customer-managed delivery evidence.
+- Spain B2B local fiscal-record validation for Spanish VAT/NIF IDs, EUR invoices, allowed VAT rates, record hash metadata, and NON-VERI*FACTU-style sandbox output.
+- XML generation using structured XML APIs instead of string assembly.
+- Provider abstraction with deterministic Peppol-style, customer-managed, and local-record mock outcomes.
 - Idempotency support for transform/send flows.
 - Persistent invoice, submission, validation result, and audit event models.
 - Audit trail events include SHA-256 hashes of relevant payloads where practical.
@@ -44,38 +46,34 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 
 ## MVP Scope
 
-The first supported profile is `BE_B2B_PEPPOL_MVP`:
+Supported MVP profiles:
 
-- Country: Belgium (`BE`)
-- Transaction type: `B2B`
-- Required format: `PEPPOL_BIS_BILLING_3_UBL_LIKE`
-- Network: `PEPPOL_MOCK`
-- Effective date: `2026-01-01`
-- Buyer routing ID required
-- Seller and buyer VAT IDs required
-- Supported currency: `EUR`
-- Allowed VAT rates: `0`, `6`, `12`, `21`
-- Document totals are required and must match calculated line and tax totals.
+- `BE_B2B_PEPPOL_MVP`: Belgium B2B Peppol-style sandbox profile, `PEPPOL_BIS_BILLING_3_UBL_LIKE`, `PEPPOL_MOCK`, buyer routing ID required, VAT rates `0`, `6`, `12`, `21`.
+- `DE_B2B_EN16931_MVP`: Germany B2B no-network sandbox profile, `XRECHNUNG_EN16931_UBL_LIKE`, `CUSTOMER_MANAGED_DELIVERY_MOCK`, German VAT IDs required, VAT rates `0`, `7`, `19`.
+- `ES_B2B_NON_VERIFACTU_MVP`: Spain B2B local fiscal-record sandbox profile, `NON_VERIFACTU_FISCAL_RECORD_XML_LIKE`, `LOCAL_FISCAL_RECORD_MOCK`, Spanish VAT/NIF IDs required, VAT rates `0`, `4`, `10`, `21`.
+
+All profiles currently support `EUR` and require document totals that match calculated line and tax totals.
 
 ## What It Does
 
 - Checks supported countries and mandate metadata.
 - Validates normalized invoice JSON with machine-readable error codes.
 - Records failed transform attempts with `validation_failed` audit evidence.
-- Transforms valid invoices into UBL-like XML inspired by Peppol BIS Billing 3.0.
+- Transforms valid Belgium and Germany invoices into UBL-like XML inspired by EN 16931 profile structures.
+- Transforms valid Spain invoices into sandbox local fiscal-record XML-like evidence with current-record hashing.
 - Stores invoice payloads, transformed XML, validation results, submissions, and audit events.
-- Simulates provider submission through `MockPeppolProvider`.
+- Simulates provider submission or local evidence recording through deterministic mock providers.
 - Tracks invoice status and exposes audit trail evidence hashes.
 
 ## What It Does Not Do
 
 - It is not certified for real Peppol delivery.
-- It does not submit to Belgian tax authorities.
-- It does not perform official UBL schema validation.
+- It does not submit to Belgian, German, Spanish, or EU tax authority systems.
+- It does not perform official UBL, XRechnung, Peppol, VERI*FACTU, or Spain B2B platform conformance validation.
 - It does not provide legal advice or jurisdiction-specific compliance certification.
 - It does not implement tenant-scoped authentication, billing, real webhooks, or production retention policies yet.
 
-This MVP produces UBL-like XML for sandbox/demo purposes. Production use would require official schema validation, certified access point integration, country-specific legal review, and conformance testing.
+This MVP produces UBL-like XML and fiscal-record XML-like output for sandbox/demo purposes. Production use would require official schema validation, certified provider or platform integration where applicable, country-specific legal review, and conformance testing.
 
 ## Architecture
 
@@ -106,7 +104,7 @@ app/
   services/          validation, transform, provider, invoice, audit logic
 docs/
   adrs/              architecture decision records
-examples/            sample Belgium invoice payloads and curl commands
+examples/            sample Belgium, Germany, and Spain invoice payloads and curl commands
 scripts/             smoke checks for local multi-region runtime
 site/                static sales landing page deployed to Cloudflare Pages
 tests/               pytest coverage for validation, transform, send, audit
@@ -150,6 +148,20 @@ curl -s -X POST http://localhost:8000/v1/invoices/validate \
   -H "X-API-Key: local-dev-key" \
   -H "Content-Type: application/json" \
   --data @examples/belgium_valid_invoice.json
+```
+
+Validate Germany and Spain no-network profiles:
+
+```bash
+curl -s -X POST http://localhost:8000/v1/invoices/validate \
+  -H "X-API-Key: local-dev-key" \
+  -H "Content-Type: application/json" \
+  --data @examples/germany_valid_invoice.json
+
+curl -s -X POST http://localhost:8000/v1/invoices/validate \
+  -H "X-API-Key: local-dev-key" \
+  -H "Content-Type: application/json" \
+  --data @examples/spain_valid_invoice.json
 ```
 
 Transform with idempotency:
@@ -277,8 +289,9 @@ See [docs/limitations.md](docs/limitations.md) for compliance, security, and ope
 1. Real Peppol access point integration
 2. Official UBL schema validation
 3. Poland KSeF profile
-4. Webhook delivery
-5. Tenant-scoped auth and account management
-6. Usage-based billing/metering
-7. Dashboard
-8. Terraform/AWS deployment
+4. Official XRechnung and Spain SIF/VERI*FACTU conformance adapters
+5. Webhook delivery
+6. Tenant-scoped auth and account management
+7. Usage-based billing/metering
+8. Dashboard
+9. Terraform/AWS deployment

@@ -1,0 +1,36 @@
+{
+  "country": "DE",
+  "transaction_type": "B2B",
+  "invoice_number": "INV-DE-2026-0001",
+  "issue_date": "2026-02-10",
+  "currency": "EUR",
+  "seller": {
+    "name": "Acme Deutschland GmbH",
+    "vat_id": "DE123456789",
+    "country_code": "DE"
+  },
+  "buyer": {
+    "name": "Globex Deutschland GmbH",
+    "vat_id": "DE987654321",
+    "country_code": "DE"
+  },
+  "lines": [
+    {
+      "line_id": "1",
+      "description": "Compliance API monthly subscription",
+      "quantity": "3",
+      "unit_price": "100.00",
+      "vat_rate": "19",
+      "line_extension_amount": "300.00",
+      "tax_amount": "57.00",
+      "total_amount": "357.00"
+    }
+  ],
+  "totals": {
+    "tax_exclusive_amount": "300.00",
+    "tax_amount": "57.00",
+    "tax_inclusive_amount": "357.00",
+    "payable_amount": "357.00"
+  },
+  "payment_terms": "Payment due within 30 days"
+}

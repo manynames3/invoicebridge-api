@@ -42,8 +42,52 @@ BE_B2B_PEPPOL_MVP = CountryProfileDefinition(
     allowed_vat_rates={"0", "6", "12", "21"},
 )
 
+DE_B2B_EN16931_MVP = CountryProfileDefinition(
+    name="DE_B2B_EN16931_MVP",
+    country="DE",
+    transaction_type="B2B",
+    mandated=True,
+    effective_date=date(2025, 1, 1),
+    required_format="XRECHNUNG_EN16931_UBL_LIKE",
+    delivery_network="CUSTOMER_MANAGED_DELIVERY_MOCK",
+    pdf_allowed_as_compliant_invoice=False,
+    implementation_status="MVP_SANDBOX_NO_NETWORK",
+    notes=(
+        "Germany B2B structured invoice sandbox profile. This MVP validates and transforms invoice data into "
+        "EN 16931/XRechnung-style XML for customer-managed delivery; it does not submit through a government "
+        "or Peppol network."
+    ),
+    requires_buyer_routing_id=False,
+    requires_vat_ids=True,
+    supported_currencies={"EUR"},
+    allowed_vat_rates={"0", "7", "19"},
+)
+
+ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
+    name="ES_B2B_NON_VERIFACTU_MVP",
+    country="ES",
+    transaction_type="B2B",
+    mandated=True,
+    effective_date=date(2027, 1, 1),
+    required_format="NON_VERIFACTU_FISCAL_RECORD_XML_LIKE",
+    delivery_network="LOCAL_FISCAL_RECORD_MOCK",
+    pdf_allowed_as_compliant_invoice=False,
+    implementation_status="MVP_SANDBOX_NO_NETWORK",
+    notes=(
+        "Spain NON-VERI*FACTU-style fiscal record sandbox profile. This MVP generates local invoice record "
+        "integrity evidence and audit metadata; a PDF alone is not treated as sufficient evidence. It does not "
+        "submit records to AEAT, certify SIF compliance, or implement the Spanish B2B exchange platform."
+    ),
+    requires_buyer_routing_id=False,
+    requires_vat_ids=True,
+    supported_currencies={"EUR"},
+    allowed_vat_rates={"0", "4", "10", "21"},
+)
+
 COUNTRY_PROFILES: dict[tuple[str, str], CountryProfileDefinition] = {
     (BE_B2B_PEPPOL_MVP.country, BE_B2B_PEPPOL_MVP.transaction_type): BE_B2B_PEPPOL_MVP,
+    (DE_B2B_EN16931_MVP.country, DE_B2B_EN16931_MVP.transaction_type): DE_B2B_EN16931_MVP,
+    (ES_B2B_NON_VERIFACTU_MVP.country, ES_B2B_NON_VERIFACTU_MVP.transaction_type): ES_B2B_NON_VERIFACTU_MVP,
 }
 
 

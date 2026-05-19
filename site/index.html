@@ -919,15 +919,16 @@
               <h1 class="display">Mandates are coming. <em>Your billing system</em> can stay.</h1>
               <p class="lead">
                 Turn existing invoice JSON into country-specific e-invoice workflows: mandate checks, validation,
-                structured transformation, routing, status tracking, and audit evidence. Belgium is implemented first.
+                structured transformation, routing or local evidence, status tracking, and audit trails.
+                Belgium, Germany, and Spain sandbox profiles are implemented first.
               </p>
               <div class="hero-actions">
                 <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#api-examples">View API docs</a>
                 <a class="button secondary" href="#pricing">See pricing</a>
               </div>
               <div class="trust-row">
-                <span>Belgium profile implemented</span>
-                <span>Country roadmap built in</span>
+                <span>BE, DE, ES profiles</span>
+                <span>No-network support</span>
                 <span>Idempotent send flow</span>
                 <span>Multi-region ready</span>
               </div>
@@ -961,7 +962,7 @@ submitted
 accepted</pre>
               </div>
               <div class="mockup-footer">
-                <div class="metric"><b>27</b><span class="muted">tests passing</span></div>
+                <div class="metric"><b>37</b><span class="muted">tests passing</span></div>
                 <div class="metric"><b>5</b><span class="muted">audit event types</span></div>
                 <div class="metric"><b>0</b><span class="muted">production compliance claims</span></div>
               </div>
@@ -981,19 +982,19 @@ accepted</pre>
                 <div class="step-num">01</div>
                 <div class="icon-box">BE</div>
                 <h3>Check the mandate</h3>
-                <p>Look up country and transaction metadata before transformation. The MVP supports Belgium B2B Peppol-style invoices.</p>
+                <p>Look up country and transaction metadata before transformation. The MVP supports Belgium, Germany, and Spain profiles.</p>
               </article>
               <article class="card">
                 <div class="step-num">02</div>
                 <div class="icon-box">XML</div>
                 <h3>Validate and transform</h3>
-                <p>Validate VAT IDs, buyer routing ID, VAT rates, line totals, tax totals, and payable totals, then generate sandbox UBL-like XML.</p>
+                <p>Validate VAT IDs, routing fields where required, VAT rates, line totals, tax totals, and payable totals, then generate sandbox structured output.</p>
               </article>
               <article class="card">
                 <div class="step-num">03</div>
                 <div class="icon-box">API</div>
                 <h3>Route, track, audit</h3>
-                <p>Submit through a deterministic mock Peppol provider, track status, and store chronological audit events with payload hashes.</p>
+                <p>Submit or record through deterministic mock providers, track status, and store chronological audit events with payload hashes.</p>
               </article>
             </div>
           </div>
@@ -1031,7 +1032,7 @@ accepted</pre>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="DE">
                   <span>DE</span>
                   <strong>Germany</strong>
-                  <small>EN 16931 roadmap</small>
+                  <small>No-network MVP</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="IT">
                   <span>IT</span>
@@ -1046,7 +1047,7 @@ accepted</pre>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="ES">
                   <span>ES</span>
                   <strong>Spain</strong>
-                  <small>VERI*FACTU watchlist</small>
+                  <small>Local-record MVP</small>
                 </button>
               </div>
 
@@ -1108,9 +1109,9 @@ accepted</pre>
             </div>
 
             <p class="country-footnote">
-              Snapshot as of May 17, 2026. Country rules need legal review before production. This repository currently
-              implements Belgium only; the other country cards show the product roadmap and why the architecture is
-              valuable beyond one mandate.
+              Snapshot as of May 19, 2026. Country rules need legal review before production. Belgium, Germany, and
+              Spain are implemented as sandbox MVP profiles; the other country cards show the product roadmap and why
+              the architecture is valuable beyond one mandate.
             </p>
           </div>
         </section>
@@ -1129,13 +1130,13 @@ accepted</pre>
               </article>
               <article class="card">
                 <div class="icon-box">02</div>
-                <h3>UBL-like transformation</h3>
-                <p>XML is generated with structured APIs and clearly marked as sandbox output, not certified production UBL.</p>
+                <h3>Structured transformation</h3>
+                <p>XML is generated with structured APIs and clearly marked as sandbox output, not certified production compliance output.</p>
               </article>
               <article class="card">
                 <div class="icon-box">03</div>
                 <h3>Provider abstraction</h3>
-                <p>The mock provider preserves the shape needed for real access point integration later.</p>
+                <p>Mock providers preserve the shape needed for real access point, customer-managed, or authority integrations later.</p>
               </article>
               <article class="card">
                 <div class="icon-box">04</div>
@@ -1209,9 +1210,9 @@ No secrets in code</pre>
                 <p>For developers evaluating the workflow locally.</p>
                 <ul class="feature-list">
                   <li>Local/demo use</li>
-                  <li>Belgium MVP profile</li>
+                  <li>Belgium, Germany, Spain profiles</li>
                   <li>Validation and transform</li>
-                  <li>Mock send</li>
+                  <li>Mock send or local evidence</li>
                   <li>OpenAPI docs</li>
                 </ul>
                 <a class="button secondary" href="https://github.com/manynames3/invoicebridge-api">Start free</a>
@@ -1280,8 +1281,10 @@ No secrets in code</pre>
                 <tbody>
                   <tr><td>Monthly invoice workflows</td><td>Demo/local</td><td class="gold">5,000</td><td>25,000</td><td>Custom</td></tr>
                   <tr><td>Belgium B2B MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
-                  <tr><td>UBL-like transform</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
-                  <tr><td>Mock Peppol submission</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Germany no-network MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Spain local-record MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Structured sandbox transforms</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Mock provider outcomes</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Audit trail</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Webhook delivery</td><td>No</td><td class="gold">Planned</td><td>Planned</td><td>Custom</td></tr>
                   <tr><td>Real Peppol provider</td><td>No</td><td class="gold">No</td><td>Planning</td><td>Custom integration</td></tr>
@@ -1300,8 +1303,8 @@ No secrets in code</pre>
             </div>
             <div class="faq-grid">
               <article class="card">
-                <h3>Is this production-certified for Peppol?</h3>
-                <p>No. The current version is a sandbox MVP with UBL-like XML and a mock Peppol provider.</p>
+                <h3>Is this production-certified?</h3>
+                <p>No. The current version is a sandbox MVP with mock providers and no certified Peppol, XRechnung, AEAT, or VERI*FACTU conformance.</p>
               </article>
               <article class="card">
                 <h3>Who is this for?</h3>
@@ -1309,7 +1312,7 @@ No secrets in code</pre>
               </article>
               <article class="card">
                 <h3>Why not just generate PDFs?</h3>
-                <p>The MVP treats PDF as not compliant for the Belgium B2B profile. This is about structured invoice workflows.</p>
+                <p>The MVP treats PDF alone as insufficient for these workflows. The point is structured validation, transformation, status, and evidence.</p>
               </article>
               <article class="card">
                 <h3>Can this support KSeF later?</h3>
@@ -1322,7 +1325,7 @@ No secrets in code</pre>
         <div class="container">
           <section class="cta-band">
             <h2 class="cta-title">Prototype your compliance workflow <em>before the country-by-country rebuild.</em></h2>
-            <p>Validate invoice JSON, transform it into sandbox UBL-like XML, simulate routing, track status, and store audit evidence.</p>
+            <p>Validate invoice JSON, transform it into sandbox structured outputs, simulate routing or local evidence, track status, and store audit trails.</p>
             <div class="hero-actions" style="justify-content: center">
               <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#api-examples">View API docs</a>
               <a class="button secondary" href="https://github.com/manynames3/invoicebridge-api#local-setup">Run locally</a>
@@ -1334,7 +1337,7 @@ No secrets in code</pre>
       <footer class="footer">
         <div class="container footer-inner">
           <span>InvoiceBridge API</span>
-          <span>Sandbox MVP. Not certified Peppol or tax authority submission.</span>
+          <span>Sandbox MVP. Not certified Peppol, XRechnung, VERI*FACTU, or tax authority submission.</span>
         </div>
       </footer>
     </div>
@@ -1400,21 +1403,21 @@ No secrets in code</pre>
           sourceUrl: "https://www.impots.gouv.fr/facturation-electronique-qu-est-ce-que-ca-change-pour-moi",
         },
         DE: {
-          status: "Roadmap adapter",
+          status: "Implemented no-network profile",
           title: "Germany EN 16931 e-invoices",
           mandate:
             "Domestic B2B e-invoicing started from January 1, 2025 with transitional rules and EN 16931-compatible structured formats.",
-          network: "Decentralized exchange, not central clearance",
-          format: "XRechnung, ZUGFeRD, or other EN 16931-compatible format",
+          network: "Customer-managed delivery, not central clearance",
+          format: "XRechnung/EN 16931 UBL-like sandbox XML",
           pain:
             "Germany creates receiving-readiness and mixed-format pressure. Sellers need to know whether an invoice is actually structured and valid, not merely a PDF attachment.",
           solution:
-            "A Germany adapter would validate EN 16931-required fields, produce supported structured formats, and retain the same status and audit model even without a central clearance network.",
+            "The implemented Germany MVP validates normalized invoice JSON, produces XRechnung/EN 16931-style sandbox XML, records customer-managed delivery status, and keeps the same audit evidence model.",
           solves: [
-            "Format eligibility checks before invoice delivery",
-            "EN 16931 validation profile",
-            "Transformer choices for XRechnung or ZUGFeRD",
-            "Evidence log for sent, delivered, failed, or archived states",
+            "Mandate check endpoint for Germany B2B",
+            "German VAT ID and VAT-rate validation",
+            "XRechnung/EN 16931-style XML transformation",
+            "Customer-managed delivery mock status and audit trail",
           ],
           sourceLabel: "Official German source",
           sourceUrl: "https://e-rechnung-bund.de/e-rechnung/e-rechnung-zwischen-unternehmen-b2b/",
@@ -1460,25 +1463,24 @@ No secrets in code</pre>
           sourceUrl: "https://static.anaf.ro/static/10/Anaf/Informatii_R/Clarificare%20RO_e_Factura.pdf",
         },
         ES: {
-          status: "Watchlist adapter",
-          title: "Spain VERI*FACTU and B2B e-invoice",
+          status: "Implemented local-record profile",
+          title: "Spain local fiscal-record evidence",
           mandate:
-            "VERI*FACTU invoicing-system requirements are scheduled for January 1, 2027 for corporate income taxpayers and July 1, 2027 for other covered taxpayers.",
-          network: "AEAT records plus Spanish e-invoice platform rules",
-          format: "Invoice records, QR requirements, and future B2B exchange payloads",
+            "Spain has invoicing-system record integrity requirements and a separate B2B e-invoice framework; this MVP models local non-VERI*FACTU-style fiscal-record evidence only.",
+          network: "Local record storage, no AEAT submission",
+          format: "NON-VERI*FACTU-style fiscal record XML-like evidence",
           pain:
             "Spain mixes invoicing-system integrity requirements with electronic invoice exchange. Product teams need to avoid blending fiscal record controls, QR obligations, and B2B platform routing.",
           solution:
-            "A Spain adapter would model VERI*FACTU records and B2B invoice exchange separately, so platforms can add controls without rewriting core invoice creation.",
+            "The implemented Spain MVP validates normalized invoice JSON, generates sandbox local fiscal-record evidence with current-record hashing, and records status without claiming AEAT submission or SIF certification.",
           solves: [
-            "Mandate decisioning by taxpayer type and date",
-            "Separate record-control and exchange workflows",
-            "Event log for created, signed, transmitted, or corrected records",
-            "Provider boundary for AEAT and platform-specific integrations",
+            "Mandate check endpoint for Spain B2B local-record mode",
+            "Spanish VAT/NIF and VAT-rate validation",
+            "Record hash and software-system metadata warnings",
+            "Local fiscal-record mock status and audit trail",
           ],
           sourceLabel: "Official Spanish tax source",
-          sourceUrl:
-            "https://sede.agenciatributaria.gob.es/Sede/en_gb/iva/sistemas-informaticos-facturacion-verifactu/preguntas-frecuentes/cuestiones-generales-objeto.html",
+          sourceUrl: "https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu/cuestiones-generales.html",
         },
       };
 

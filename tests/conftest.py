@@ -85,3 +85,87 @@ def valid_invoice() -> dict:
         },
         "payment_terms": "Payment due within 30 days",
     }
+
+
+@pytest.fixture
+def germany_invoice() -> dict:
+    return {
+        "country": "DE",
+        "transaction_type": "B2B",
+        "invoice_number": "INV-DE-2026-0001",
+        "issue_date": "2026-02-10",
+        "currency": "EUR",
+        "seller": {
+            "name": "Acme Deutschland GmbH",
+            "vat_id": "DE123456789",
+            "country_code": "DE",
+        },
+        "buyer": {
+            "name": "Globex Deutschland GmbH",
+            "vat_id": "DE987654321",
+            "country_code": "DE",
+        },
+        "lines": [
+            {
+                "line_id": "1",
+                "description": "Compliance API monthly subscription",
+                "quantity": "3",
+                "unit_price": "100.00",
+                "vat_rate": "19",
+                "line_extension_amount": "300.00",
+                "tax_amount": "57.00",
+                "total_amount": "357.00",
+            }
+        ],
+        "totals": {
+            "tax_exclusive_amount": "300.00",
+            "tax_amount": "57.00",
+            "tax_inclusive_amount": "357.00",
+            "payable_amount": "357.00",
+        },
+        "payment_terms": "Payment due within 30 days",
+    }
+
+
+@pytest.fixture
+def spain_invoice() -> dict:
+    return {
+        "country": "ES",
+        "transaction_type": "B2B",
+        "invoice_number": "INV-ES-2026-0001",
+        "issue_date": "2026-03-05",
+        "currency": "EUR",
+        "seller": {
+            "name": "Acme Espana SL",
+            "vat_id": "ESA12345678",
+            "country_code": "ES",
+        },
+        "buyer": {
+            "name": "Globex Espana SL",
+            "vat_id": "ESB87654321",
+            "country_code": "ES",
+        },
+        "lines": [
+            {
+                "line_id": "1",
+                "description": "Local fiscal record workflow",
+                "quantity": "1",
+                "unit_price": "500.00",
+                "vat_rate": "21",
+                "line_extension_amount": "500.00",
+                "tax_amount": "105.00",
+                "total_amount": "605.00",
+            }
+        ],
+        "totals": {
+            "tax_exclusive_amount": "500.00",
+            "tax_amount": "105.00",
+            "tax_inclusive_amount": "605.00",
+            "payable_amount": "605.00",
+        },
+        "payment_terms": "Payment due within 30 days",
+        "metadata": {
+            "software_system_id": "IB-SANDBOX-SIF-001",
+            "previous_record_hash": "0" * 64,
+        },
+    }

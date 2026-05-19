@@ -126,3 +126,39 @@ def test_send_can_return_pending(
     response = client.post("/v1/invoices/send", json={"invoice": invoice}, headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["delivery_status"] == "pending"
+
+
+def test_send_germany_invoice_records_customer_managed_delivery(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    response = client.post(
+        "/v1/invoices/send",
+        json={"invoice": germany_invoice},
+        headers={**auth_headers, "Idempotency-Key": "send-de-001"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
+    assert body["delivery_status"] == "accepted"
+    assert body["provider_reference"].startswith("LOCAL-DE-")
+
+
+def test_send_spain_invoice_records_local_fiscal_record(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    response = client.post(
+        "/v1/invoices/send",
+        json={"invoice": spain_invoice},
+        headers={**auth_headers, "Idempotency-Key": "send-es-001"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["network"] == "LOCAL_FISCAL_RECORD_MOCK"
+    assert body["delivery_status"] == "accepted"
+    assert body["provider_reference"].startswith("LOCAL-ES-FISCAL-")

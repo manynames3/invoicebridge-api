@@ -4,9 +4,11 @@ This repository is a sandbox MVP, not a certified e-invoicing network service.
 
 ## Compliance
 
-- XML output is UBL-like and Peppol-inspired, not official schema-validated UBL.
+- XML output is UBL-like or fiscal-record XML-like, not official schema-validated UBL, XRechnung, Peppol, VERI*FACTU, or Spain B2B platform output.
 - No real Peppol access point is integrated.
 - No tax authority or government platform submission is performed.
+- Germany is modeled as customer-managed delivery, not central clearance or certified XRechnung conformance.
+- Spain is modeled as local fiscal-record evidence only, not AEAT submission, certified SIF compliance, or production VERI*FACTU.
 - Mandate metadata is static MVP configuration, not legal advice.
 - Country-specific legal review and conformance testing are required before production use.
 

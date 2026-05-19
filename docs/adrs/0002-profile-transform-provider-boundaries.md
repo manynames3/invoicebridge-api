@@ -15,6 +15,7 @@ Keep country profiles, validators, transformers, and providers in separate modul
 ## Consequences
 
 - Belgium B2B Peppol-style rules are isolated in `BEPeppolMVPValidator`.
-- UBL-like XML generation is isolated from validation and provider submission.
-- Mock Peppol submission is isolated behind `BaseEInvoiceProvider`.
+- Germany and Spain no-network rules are isolated in `NoNetworkStructuredInvoiceValidator` subclasses.
+- UBL-like and fiscal-record XML generation are isolated from validation and provider submission.
+- Mock Peppol, customer-managed delivery, and local fiscal-record providers are isolated behind `BaseEInvoiceProvider`.
 - Adding KSeF or a real Peppol provider should be additive rather than a rewrite.

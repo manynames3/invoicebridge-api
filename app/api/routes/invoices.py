@@ -26,7 +26,10 @@ def service(db: Session = Depends(get_db)) -> InvoiceService:
     "/validate",
     response_model=InvoiceValidationResponse,
     summary="Validate a normalized invoice",
-    description="Validates invoice JSON against the Belgium B2B Peppol-style MVP profile.",
+    description=(
+        "Validates invoice JSON against the selected MVP country profile. Belgium uses a Peppol-style "
+        "sandbox profile; Germany and Spain use no-network sandbox profiles."
+    ),
 )
 def validate_invoice(
     invoice: NormalizedInvoiceInput,
@@ -39,8 +42,10 @@ def validate_invoice(
     "/transform",
     response_model=TransformInvoiceResponse,
     responses={422: {"model": InvoiceValidationResponse}},
-    summary="Transform a valid invoice into sandbox UBL-like XML",
-    description="Runs validation, stores the invoice and audit trail, and produces MVP UBL-like XML.",
+    summary="Transform a valid invoice into a sandbox structured document",
+    description=(
+        "Runs validation, stores the invoice and audit trail, and produces the configured MVP output format."
+    ),
 )
 def transform_invoice(
     invoice: NormalizedInvoiceInput,
@@ -57,10 +62,10 @@ def transform_invoice(
     "/send",
     response_model=SendInvoiceResponse,
     responses={422: {"model": InvoiceValidationResponse}},
-    summary="Submit an invoice through the mock Peppol provider",
+    summary="Submit or record an invoice through the configured mock provider",
     description=(
         "Accepts an existing invoice_id or invoice payload, then records deterministic "
-        "sandbox provider results."
+        "sandbox provider results for Peppol-style or no-network profiles."
     ),
 )
 def send_invoice(
