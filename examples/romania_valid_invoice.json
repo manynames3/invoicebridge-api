@@ -17,7 +17,7 @@
   "lines": [
     {
       "line_id": "1",
-      "description": "RO e-Factura sandbox workflow",
+      "description": "RO e-Factura evaluation workflow",
       "quantity": "1",
       "unit_price": "1000.00",
       "vat_rate": "21",
@@ -34,6 +34,6 @@
   },
   "payment_terms": "Payment due within 30 days",
   "metadata": {
-    "anaf_submission_context": "sandbox-spv-oauth"
+    "anaf_submission_context": "mock-spv-oauth"
   }
 }

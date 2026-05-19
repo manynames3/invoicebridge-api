@@ -103,6 +103,15 @@ def _requirements_for_profile(
     if profile.country == "ES":
         return [
             *common,
+            _passed(
+                "spanish_sif_record_fields",
+                "Spain RegistroAlta output includes AEAT-required hash input fields, QR payload fields, and SIF "
+                "metadata.",
+            ),
+            _passed(
+                "spanish_sif_hash_chain",
+                "Spain record and event hashes are generated with SHA-256 over explicit official-field subsets.",
+            ),
             _configured(
                 "spanish_sif_validation",
                 bool(settings.spanish_sif_validator_command),
@@ -111,9 +120,28 @@ def _requirements_for_profile(
             ),
             _configured(
                 "spanish_sif_signing",
-                settings.spanish_sif_signing_configured,
+                settings.spanish_sif_signing_configured or bool(settings.spanish_sif_signing_command),
                 "Spanish SIF record signing configuration is present.",
                 "Configure signing material outside source control for fiscal record integrity.",
+            ),
+            _configured(
+                "spanish_sif_event_log",
+                settings.spanish_sif_event_log_configured,
+                "Spanish SIF event log persistence is configured.",
+                "Configure immutable SIF event logging for NO_VERIFACTU operation.",
+            ),
+            _configured(
+                "spanish_aeat_test_portal_validation",
+                settings.spanish_sif_aeat_test_portal_validated,
+                "AEAT external test portal validation evidence is present.",
+                "Run Spain SIF records through the AEAT external test portal and store the evidence.",
+            ),
+            _configured(
+                "spanish_verifactu_submission_capability",
+                settings.spanish_verifactu_submission_capable,
+                "VERI*FACTU submission capability is configured.",
+                "Implement and configure AEAT web-service submission capability even if customers use "
+                "NO_VERIFACTU mode.",
             ),
             _configured(
                 "spanish_responsible_declaration",

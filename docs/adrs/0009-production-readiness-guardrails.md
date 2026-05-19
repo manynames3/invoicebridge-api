@@ -6,11 +6,11 @@ Accepted
 
 ## Context
 
-Sandbox validation and mock submission are useful for demos, but they are not enough for a customer to rely on the API for legal e-invoicing mandates. Germany, Poland, Romania, and Spain each require official validation, credentials, signatures, receipts, declarations, or country-specific evidence before production reliance.
+Evaluation validation and mock submission are useful for demos, but they are not enough for a customer to rely on the API for legal e-invoicing mandates. Germany, Poland, Romania, and Spain each require official validation, credentials, signatures, receipts, declarations, or country-specific evidence before production reliance.
 
 ## Decision
 
-InvoiceBridge exposes production-readiness checks and official-validator command hooks instead of treating sandbox success as production compliance. The API reports missing blockers for each country and runs configured validator commands against transformed XML artifacts when provided.
+InvoiceBridge exposes production-readiness checks and official-validator command hooks instead of treating mock workflow success as production compliance. The API reports missing blockers for each country and runs configured validator commands against transformed XML artifacts when provided.
 
 ## Consequences
 

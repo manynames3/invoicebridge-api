@@ -10,7 +10,7 @@ from app.core.logging import mask_identifier
 from app.core.regions import accepts_regional_writes, current_region
 from app.db.models import AuditEvent, Invoice, InvoiceSubmission, Tenant, ValidationResult
 from app.schemas.audit import AuditEventResponse, AuditTrailResponse
-from app.schemas.compliance import OfficialValidationResponse
+from app.schemas.compliance import OfficialValidationResponse, SpanishSIFResponsibleDeclarationResponse
 from app.schemas.invoice import (
     CreateInvoiceRequest,
     InvoiceStatusResponse,
@@ -27,6 +27,13 @@ from app.services.checksum import stable_payload_hash
 from app.services.money import money
 from app.services.official_validation import validate_official_document
 from app.services.providers.registry import get_provider_for_network
+from app.services.spain_sif import (
+    declaration_summary,
+    event_record_hash,
+    registration_record_hash,
+    responsible_declaration_draft,
+)
+from app.services.spanish_sif_signing import sign_spanish_sif_document
 from app.services.tenants import tenant_region_decision
 from app.services.transform.registry import get_transformer_for_format
 from app.services.validation.registry import get_validator_for_invoice
@@ -94,6 +101,16 @@ class InvoiceService:
 
         transformer = get_transformer_for_format(validation.required_format)
         xml = transformer.transform(invoice, validation)
+        signing_result = None
+        if (invoice.country or "").upper() == "ES":
+            try:
+                signing_result = sign_spanish_sif_document(xml)
+                xml = signing_result.signed_xml
+            except RuntimeError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail={"code": "SPANISH_SIF_SIGNING_FAILED", "message": str(exc)},
+                ) from exc
         db_invoice = Invoice(
             tenant_id=tenant.id if tenant else None,
             country=(invoice.country or "BE").upper(),
@@ -151,6 +168,34 @@ class InvoiceService:
             metadata={"format": validation.required_format, "xml_bytes": len(xml.encode("utf-8"))},
             payload_for_hash=xml,
         )
+        if db_invoice.country == "ES":
+            record_hash = registration_record_hash(invoice, validation)
+            sif_event_hash = event_record_hash(invoice)
+            create_audit_event(
+                self.db,
+                invoice_id=db_invoice.id,
+                event_type="sif_record_generated",
+                metadata={
+                    "record_type": "REGISTRO_FACTURACION_ALTA",
+                    "record_hash": record_hash,
+                    "event_hash": sif_event_hash,
+                    "hash_algorithm": "SHA-256",
+                    "sif_mode": invoice.metadata.get("sif_mode"),
+                    "declaration": declaration_summary(invoice),
+                },
+                payload_for_hash={"record_hash": record_hash, "event_hash": sif_event_hash},
+            )
+            if signing_result and signing_result.configured:
+                create_audit_event(
+                    self.db,
+                    invoice_id=db_invoice.id,
+                    event_type="sif_record_signed",
+                    metadata={
+                        "signature_reference": signing_result.signature_reference,
+                        "message": signing_result.message,
+                    },
+                    payload_for_hash=xml,
+                )
         self.db.commit()
         self.db.refresh(db_invoice)
         return TransformInvoiceResponse(
@@ -317,6 +362,29 @@ class InvoiceService:
                 },
             )
         return validate_official_document(invoice, invoice.transformed_xml)
+
+    def spain_responsible_declaration(self, invoice_id: str) -> SpanishSIFResponsibleDeclarationResponse:
+        invoice = self._get_invoice(invoice_id)
+        if invoice.country != "ES":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "RESPONSIBLE_DECLARATION_NOT_AVAILABLE",
+                    "message": "Responsible declaration draft output is only available for Spain SIF invoices.",
+                },
+            )
+        payload = NormalizedInvoiceInput.model_validate(invoice.original_payload)
+        draft = responsible_declaration_draft(payload)
+        return SpanishSIFResponsibleDeclarationResponse(
+            invoice_id=invoice.id,
+            country=invoice.country,
+            status=str(draft["status"]),
+            declaration_reference=draft.get("declaration_reference"),
+            producer=draft["producer"],
+            software=draft["software"],
+            statement=str(draft["statement"]),
+            external_requirements=draft["external_requirements"],
+        )
 
     def create_from_scratch(
         self,

@@ -43,6 +43,57 @@ def test_poland_readiness_exposes_free_direct_api_blockers(
     assert {"ksef_schema_validation", "ksef_api_endpoint", "ksef_credentials"} <= missing_codes
 
 
+def test_spain_readiness_exposes_sif_production_blockers(
+    client: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
+    response = client.get(
+        "/v1/compliance/production-readiness",
+        params={"country": "ES", "transaction_type": "B2B"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["production_ready"] is False
+    missing_codes = {requirement["code"] for requirement in body["requirements"] if requirement["status"] == "missing"}
+    assert {
+        "spanish_sif_validation",
+        "spanish_sif_signing",
+        "spanish_sif_event_log",
+        "spanish_aeat_test_portal_validation",
+        "spanish_verifactu_submission_capability",
+        "spanish_responsible_declaration",
+    } <= missing_codes
+
+
+def test_spain_readiness_passes_only_when_external_controls_are_configured(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SPANISH_SIF_VALIDATOR_COMMAND", "true {xml}")
+    monkeypatch.setenv("SPANISH_SIF_SIGNING_CONFIGURED", "true")
+    monkeypatch.setenv("SPANISH_SIF_EVENT_LOG_CONFIGURED", "true")
+    monkeypatch.setenv("SPANISH_SIF_RESPONSIBLE_DECLARATION_READY", "true")
+    monkeypatch.setenv("SPANISH_SIF_AEAT_TEST_PORTAL_VALIDATED", "true")
+    monkeypatch.setenv("SPANISH_VERIFACTU_SUBMISSION_CAPABLE", "true")
+    get_settings.cache_clear()
+
+    response = client.get(
+        "/v1/compliance/production-readiness",
+        params={"country": "ES", "transaction_type": "B2B"},
+        headers=auth_headers,
+    )
+
+    get_settings.cache_clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["production_ready"] is True
+    assert body["blocker_summary"] == []
+
+
 def test_official_validation_is_explicit_when_validator_is_not_configured(
     client: TestClient,
     auth_headers: dict[str, str],
@@ -88,3 +139,21 @@ def test_official_validation_runs_configured_command(
     assert body["configured"] is True
     assert body["passed"] is True
     assert body["exit_code"] == 0
+
+
+def test_spain_responsible_declaration_draft_endpoint(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    transformed = client.post("/v1/invoices/transform", json=spain_invoice, headers=auth_headers)
+    invoice_id = transformed.json()["invoice_id"]
+
+    response = client.get(f"/v1/invoices/{invoice_id}/spain/responsible-declaration", headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["country"] == "ES"
+    assert body["status"] == "draft_not_legal_advice"
+    assert body["software"]["verifactu_capable"] is True
+    assert "AEAT external test portal evidence" in body["external_requirements"]

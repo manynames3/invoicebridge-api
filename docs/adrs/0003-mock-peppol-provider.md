@@ -10,7 +10,7 @@ Real Peppol delivery, certified XRechnung conformance, KSeF submission, ANAF/SPV
 
 ## Decision
 
-Implement deterministic mock providers for Peppol-style submission, customer-managed Germany delivery, Poland KSeF sandbox submission, Romania ANAF sandbox submission, and Spain local fiscal-record evidence.
+Implement deterministic mock providers for Peppol-style submission, customer-managed Germany delivery, Poland KSeF mock submission, Romania ANAF mock submission, and Spain local fiscal-record evidence.
 
 ## Consequences
 

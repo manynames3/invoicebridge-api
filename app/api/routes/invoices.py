@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.audit import AuditTrailResponse
-from app.schemas.compliance import OfficialValidationResponse
+from app.schemas.compliance import OfficialValidationResponse, SpanishSIFResponsibleDeclarationResponse
 from app.schemas.invoice import (
     CreateInvoiceRequest,
     InvoiceStatusResponse,
@@ -28,10 +28,8 @@ def service(db: Session = Depends(get_db)) -> InvoiceService:
     response_model=InvoiceValidationResponse,
     summary="Validate a normalized invoice",
     description=(
-        "Validates invoice JSON against the selected MVP country profile. Belgium uses a Peppol-style "
-        "sandbox profile; Germany uses a no-network XRechnung profile; Spain uses a no-network sandbox profile; "
-        "Poland and Romania use "
-        "direct government-platform sandbox profiles."
+        "Validates invoice JSON against the selected MVP country profile. Belgium, Poland, Romania, and Spain are "
+        "not ready for legal production use; Germany is usable only when official XRechnung validation passes."
     ),
 )
 def validate_invoice(
@@ -68,7 +66,7 @@ def transform_invoice(
     summary="Submit or record an invoice through the configured mock provider",
     description=(
         "Accepts an existing invoice_id or invoice payload, then records deterministic "
-        "sandbox provider results for Peppol-style, no-network, or government-platform profiles."
+        "mock provider results for Peppol-style, no-network, local-record, or government-platform profiles."
     ),
 )
 def send_invoice(
@@ -126,6 +124,22 @@ def official_validate_invoice(
     invoice_service: InvoiceService = Depends(service),
 ) -> OfficialValidationResponse:
     return invoice_service.official_validate(invoice_id)
+
+
+@router.get(
+    "/{invoice_id}/spain/responsible-declaration",
+    response_model=SpanishSIFResponsibleDeclarationResponse,
+    summary="Generate Spain SIF responsible declaration draft evidence",
+    description=(
+        "Returns a draft evidence object for the Spain SIF responsible declaration. "
+        "This is not a legal certification; the producer must review and issue the final declaration."
+    ),
+)
+def spain_responsible_declaration(
+    invoice_id: str,
+    invoice_service: InvoiceService = Depends(service),
+) -> SpanishSIFResponsibleDeclarationResponse:
+    return invoice_service.spain_responsible_declaration(invoice_id)
 
 
 @router.get(

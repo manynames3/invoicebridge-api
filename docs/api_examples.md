@@ -105,7 +105,7 @@ curl -s -X POST "$BASE_URL/v1/invoices/validate" \
   --data @examples/spain_valid_invoice.json
 ```
 
-Spain validation requires local SIF metadata such as `sif_mode`, `software_system_id`, `software_name`, `software_version`, `installation_number`, `record_timestamp`, and either `previous_record_hash` or `first_record=true`.
+Spain validation requires local SIF metadata such as `sif_mode`, `invoice_type`, producer identity, software identity, installation number, `verifactu_capable=true`, `event_log_enabled=true`, `record_timestamp`, and either prior record/event hashes or first-record/first-event flags.
 
 Transform:
 
@@ -155,6 +155,20 @@ Run configured official validator command:
 ```bash
 curl -s -X POST "$BASE_URL/v1/invoices/REPLACE_ME/official-validate" \
   -H "X-API-Key: $API_KEY"
+```
+
+For Spain SIF schema checks, install AEAT assets first:
+
+```bash
+make setup-spanish-sif-assets
+export SPANISH_SIF_VALIDATOR_COMMAND="vendor/spanish-sif/validate-spanish-sif.sh {xml}"
+```
+
+Generate Spain responsible-declaration draft evidence:
+
+```bash
+curl -s -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/v1/invoices/REPLACE_ME/spain/responsible-declaration"
 ```
 
 Send:

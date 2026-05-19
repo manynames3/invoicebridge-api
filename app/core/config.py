@@ -29,7 +29,11 @@ class Settings(BaseSettings):
     ro_efactura_oauth_configured: bool = False
     spanish_sif_validator_command: str | None = None
     spanish_sif_signing_configured: bool = False
+    spanish_sif_signing_command: str | None = None
+    spanish_sif_event_log_configured: bool = False
     spanish_sif_responsible_declaration_ready: bool = False
+    spanish_sif_aeat_test_portal_validated: bool = False
+    spanish_verifactu_submission_capable: bool = False
 
 
 @lru_cache

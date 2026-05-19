@@ -1,4 +1,4 @@
-.PHONY: install run test lint typecheck migrate setup-xrechnung-validator docker-up docker-down docker-multiregion-up docker-multiregion-down smoke-multiregion
+.PHONY: install run test lint typecheck migrate setup-xrechnung-validator setup-spanish-sif-assets docker-up docker-down docker-multiregion-up docker-multiregion-down smoke-multiregion
 
 install:
 	python -m pip install -e ".[dev]"
@@ -20,6 +20,9 @@ migrate:
 
 setup-xrechnung-validator:
 	scripts/setup_xrechnung_validator.sh
+
+setup-spanish-sif-assets:
+	scripts/setup_spanish_sif_assets.sh
 
 docker-up:
 	docker-compose up --build

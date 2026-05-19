@@ -18,7 +18,7 @@ def test_transform_valid_invoice(
     assert body["status"] == "transformed"
     assert body["format"] == "PEPPOL_BIS_BILLING_3_UBL_LIKE"
     assert body["processing_region"] == "test-region-a"
-    assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert "InvoiceBridgeStructuredInvoice" in body["xml_preview"]
     assert body["document_url"] == f"/v1/invoices/{body['invoice_id']}/document"
     assert len(body["document_sha256"]) == 64
     assert body["audit_log_id"]
@@ -87,7 +87,7 @@ def test_create_invoice_from_scratch_generates_valid_transform(
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "transformed"
-    assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert "InvoiceBridgeStructuredInvoice" in body["xml_preview"]
     assert body["document_url"] == f"/v1/invoices/{body['invoice_id']}/document"
 
 
@@ -147,14 +147,21 @@ def test_transform_spain_invoice_uses_local_fiscal_record_format(
     document = client.get(body["document_url"], headers=auth_headers)
     assert document.status_code == 200
     root = ET.fromstring(document.text)
-    assert root.tag == "InvoiceBridgeSpanishSIFRecord"
-    assert root.get("certification_status") == "not_certified"
-    assert root.findtext("RecordType") == "NON_VERIFACTU_LOCAL_SIF_RECORD"
-    assert root.findtext("SIFMode") == "NO_VERIFACTU"
-    assert root.findtext("SoftwareSystem/SoftwareSystemID") == "IB-SANDBOX-SIF-001"
-    assert root.findtext("RecordChain/PreviousRecordHash") == "0" * 64
-    assert len(root.findtext("RecordChain/CurrentRecordHash") or "") == 64
-    assert "huella=" in (root.findtext("QRCodePayloadCandidate") or "")
+    ns = {
+        "sfLR": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd",
+        "sf": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd",
+    }
+    assert root.tag == f"{{{ns['sfLR']}}}RegFactuSistemaFacturacion"
+    assert root.findtext("sfLR:Cabecera/sf:ObligadoEmision/sf:NIF", namespaces=ns) == "A12345674"
+    assert root.findtext(".//sf:RegistroAlta/sf:IDVersion", namespaces=ns) == "1.0"
+    assert root.findtext(".//sf:RegistroAlta/sf:IDFactura/sf:FechaExpedicionFactura", namespaces=ns) == "05-03-2026"
+    assert root.findtext(".//sf:RegistroAlta/sf:TipoFactura", namespaces=ns) == "F1"
+    assert root.findtext(".//sf:RegistroAlta/sf:CuotaTotal", namespaces=ns) == "105.00"
+    assert root.findtext(".//sf:RegistroAlta/sf:ImporteTotal", namespaces=ns) == "605.00"
+    assert root.findtext(".//sf:RegistroAlta/sf:TipoHuella", namespaces=ns) == "01"
+    assert len(root.findtext(".//sf:RegistroAlta/sf:Huella", namespaces=ns) or "") == 64
+    assert root.findtext(".//sf:SistemaInformatico/sf:IdSistemaInformatico", namespaces=ns) == "IB"
+    assert root.findtext(".//sf:RegistroAnterior/sf:Huella", namespaces=ns) == "0" * 64
 
 
 def test_transform_poland_invoice_uses_ksef_like_format(
@@ -183,5 +190,5 @@ def test_transform_romania_invoice_uses_ro_cius_like_format(
     body = response.json()
     assert body["status"] == "transformed"
     assert body["format"] == "RO_CIUS_UBL_2_1_XML_LIKE"
-    assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert "InvoiceBridgeStructuredInvoice" in body["xml_preview"]
     assert "RO_CIUS/UBL 2.1" in body["xml_preview"]

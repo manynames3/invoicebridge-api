@@ -174,7 +174,7 @@ def poland_invoice() -> dict:
         "lines": [
             {
                 "line_id": "1",
-                "description": "KSeF sandbox workflow",
+                "description": "KSeF evaluation workflow",
                 "quantity": "2",
                 "unit_price": "1000.00",
                 "vat_rate": "23",
@@ -215,7 +215,7 @@ def romania_invoice() -> dict:
         "lines": [
             {
                 "line_id": "1",
-                "description": "RO e-Factura sandbox workflow",
+                "description": "RO e-Factura evaluation workflow",
                 "quantity": "1",
                 "unit_price": "1000.00",
                 "vat_rate": "21",
@@ -231,7 +231,7 @@ def romania_invoice() -> dict:
             "payable_amount": "1210.00",
         },
         "payment_terms": "Payment due within 30 days",
-        "metadata": {"anaf_submission_context": "sandbox-spv-oauth"},
+        "metadata": {"anaf_submission_context": "mock-spv-oauth"},
     }
 
 
@@ -274,12 +274,22 @@ def spain_invoice() -> dict:
         "payment_terms": "Payment due within 30 days",
         "metadata": {
             "sif_mode": "NO_VERIFACTU",
-            "software_system_id": "IB-SANDBOX-SIF-001",
+            "invoice_type": "F1",
+            "software_producer_tax_id": "ESA12345674",
+            "software_producer_name": "InvoiceBridge Labs SL",
+            "software_system_id": "IB-EVAL-SIF-001",
+            "software_system_code": "IB",
             "software_name": "InvoiceBridge SIF Test Harness",
             "software_version": "0.1.0",
             "installation_number": "IB-ES-INSTALL-001",
+            "verifactu_capable": True,
+            "only_verifactu_capable": False,
+            "event_log_enabled": True,
             "record_timestamp": "2026-03-05T10:15:00+01:00",
             "previous_record_hash": "0" * 64,
+            "previous_record_invoice_number": "INV-ES-2026-0000",
+            "previous_record_issue_date": "2026-03-04",
+            "previous_event_hash": "0" * 64,
             "responsible_declaration_reference": "IB-SIF-DECLARATION-DEMO-001",
         },
     }

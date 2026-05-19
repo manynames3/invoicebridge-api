@@ -2,7 +2,7 @@
 
 InvoiceBridge API is a production-style FastAPI backend that accepts normalized invoice JSON, selects a country mandate profile, validates totals and tax rules, transforms valid invoices into structured outputs, simulates routing or local evidence recording, tracks status, and stores an audit trail. It is designed as a B2B infrastructure API for ERP, accounting SaaS, billing platforms, marketplaces, and cross-border sellers that need e-invoicing compliance workflows without replacing their existing invoice system.
 
-This is a portfolio MVP, not a certified e-invoicing gateway. Germany now has a no-paid-provider XRechnung path with local official validator support; Spain has a stricter local SIF record-evidence path; Belgium, Poland, Romania, and Spain still do not perform official network or tax-authority submission.
+This is a portfolio MVP, not a certified e-invoicing gateway. Germany is usable only when generated invoices pass official XRechnung validation. Belgium, Poland, Romania, and Spain are not ready for legal production use yet because required access-point, tax-authority, signing, declaration, or conformance work is still missing.
 
 Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev)
 
@@ -32,9 +32,9 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 - Modular country/profile design with validator, transformer, and provider registries.
 - Belgium B2B validation for required parties, VAT IDs, buyer routing ID, supported currency, allowed VAT rates, line totals, tax totals, and payable total consistency.
 - Germany B2B no-network validation for German VAT ID checksums, XRechnung-required business fields, EUR invoices, XRechnung 3.0 UBL output, local KoSIT validator setup, and customer-managed delivery evidence.
-- Poland KSeF sandbox validation for Polish NIP checksum, PLN/EUR invoices, FA(3)-style output, and deterministic government-platform provider references.
-- Romania RO e-Factura sandbox validation for Romanian VAT/CUI checksums, RON/EUR invoices, RO_CIUS/UBL 2.1-style output, and deterministic ANAF provider references.
-- Spain B2B local SIF record validation for Spanish VAT/NIF/CIF checksums, EUR invoices, allowed VAT rates, required software-system identity, SHA-256 record chaining, tax breakdowns, and QR payload candidate output.
+- Poland KSeF evaluation validation for Polish NIP checksum, PLN/EUR invoices, FA(3)-style output, and deterministic government-platform provider references.
+- Romania RO e-Factura evaluation validation for Romanian VAT/CUI checksums, RON/EUR invoices, RO_CIUS/UBL 2.1-style output, and deterministic ANAF provider references.
+- Spain B2B local SIF record validation for Spanish VAT/NIF/CIF checksums, EUR invoices, allowed VAT rates, producer/software identity, VERI*FACTU capability metadata, SHA-256 record/event chaining, AEAT `RegFactuSistemaFacturacion` / `RegistroAlta` XML output, tax breakdowns, and AEAT QR payload draft output.
 - XML generation using structured XML APIs instead of string assembly.
 - Provider abstraction with deterministic Peppol-style, customer-managed, government-platform, and local-record mock outcomes.
 - Idempotency support for transform/send flows.
@@ -50,13 +50,23 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 
 Supported MVP profiles:
 
-- `BE_B2B_PEPPOL_MVP`: Belgium B2B Peppol-style sandbox profile, `PEPPOL_BIS_BILLING_3_UBL_LIKE`, `PEPPOL_MOCK`, buyer routing ID required, VAT rates `0`, `6`, `12`, `21`.
-- `DE_B2B_EN16931_MVP`: Germany B2B no-network profile, `XRECHNUNG_3_0_UBL`, `CUSTOMER_MANAGED_DELIVERY_MOCK`, German VAT checksum validation, XRechnung business field validation, VAT rates `0`, `7`, `19`.
-- `PL_B2B_KSEF_MVP`: Poland B2B KSeF sandbox profile, `KSEF_FA3_XML_LIKE`, `KSEF_GOV_SANDBOX_MOCK`, Polish NIP checksum validation, VAT rates `0`, `5`, `8`, `23`.
-- `RO_B2B_EFACTURA_MVP`: Romania B2B RO e-Factura sandbox profile, `RO_CIUS_UBL_2_1_XML_LIKE`, `RO_EFACTURA_GOV_SANDBOX_MOCK`, Romanian VAT/CUI checksum validation, VAT rates `0`, `11`, `21`.
-- `ES_B2B_NON_VERIFACTU_MVP`: Spain B2B local SIF record sandbox profile, `NON_VERIFACTU_FISCAL_RECORD_XML_LIKE`, `LOCAL_FISCAL_RECORD_MOCK`, Spanish VAT/NIF/CIF checksum validation, required SIF/software metadata, SHA-256 hash-chain evidence, VAT rates `0`, `4`, `10`, `21`.
+- `BE_B2B_PEPPOL_MVP`: not ready for legal production use. Peppol access point integration and conformance testing are roadmap work.
+- `DE_B2B_EN16931_MVP`: usable only when official validation passes. Generates XRechnung 3.0 UBL and supports KoSIT validation, but each customer deployment still needs invoice-by-invoice validation and review.
+- `PL_B2B_KSEF_MVP`: not ready for legal production use. Real KSeF API credentials, encryption, submission, and UPO handling are roadmap work.
+- `RO_B2B_EFACTURA_MVP`: not ready for legal production use. Real ANAF/SPV OAuth, upload/status polling, and signed response handling are roadmap work.
+- `ES_B2B_NON_VERIFACTU_MVP`: not ready for legal production use. Emits AEAT-shaped SIF XML and local evidence, but signing, AEAT test evidence, VERI*FACTU submission capability, and responsible declaration completion remain external blockers.
 
 Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `EUR`; Romania supports `RON` and `EUR`. All profiles require document totals that match calculated line and tax totals.
+
+## Production Status By Country
+
+| Country | Current status | What is still required |
+|---|---|---|
+| Belgium | Not ready | Real Peppol access point, official conformance testing, and provider evidence. |
+| Germany | Usable with official validation | XRechnung output must pass official validation for each customer payload; delivery remains customer-managed. |
+| Poland | Not ready | Real KSeF API authentication, encryption, production submission, and UPO receipt handling. |
+| Romania | Not ready | Real ANAF/SPV OAuth, upload/status polling, and official signed response handling. |
+| Spain | Not ready | Signing, immutable event logging, AEAT external test evidence, VERI*FACTU submission capability, responsible declaration, and legal review. |
 
 ## What It Does
 
@@ -65,11 +75,11 @@ Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `
 - Records failed transform attempts with `validation_failed` audit evidence.
 - Transforms valid Germany invoices into XRechnung 3.0 UBL XML with the XRechnung CustomizationID.
 - Transforms valid Belgium and Romania invoices into UBL-like XML inspired by Peppol/RO_CIUS profile structures.
-- Transforms valid Poland invoices into KSeF FA(3)-style XML-like sandbox output.
-- Transforms valid Spain invoices into sandbox local SIF record XML-like evidence with software identity, current/previous record hashing, tax breakdowns, and QR payload candidate data.
+- Transforms valid Poland invoices into KSeF FA(3)-style XML-like evaluation output.
+- Transforms valid Spain invoices into AEAT-shaped local SIF `RegFactuSistemaFacturacion` XML with software identity, `RegistroAlta` fields, current/previous record hashing, event hashing, tax breakdowns, and QR payload draft data.
 - Stores invoice payloads, transformed XML, validation results, submissions, and audit events.
-- Exposes the stored transformed XML document with a document URL and SHA-256 hash for downstream sandbox export/testing.
-- Exposes production-readiness guardrails so sandbox profiles are not misrepresented as legal production integrations.
+- Exposes the stored transformed XML document with a document URL and SHA-256 hash for downstream export/testing.
+- Exposes production-readiness guardrails so evaluation-only profiles are not misrepresented as legal production integrations.
 - Simulates provider submission or local evidence recording through deterministic mock providers.
 - Tracks invoice status and exposes audit trail evidence hashes.
 
@@ -81,7 +91,7 @@ Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `
 - It does not provide legal advice or jurisdiction-specific compliance certification.
 - It does not implement tenant-scoped authentication, billing, real webhooks, or production retention policies yet.
 
-This MVP produces XRechnung UBL for Germany, local SIF record XML-like evidence for Spain, and UBL-like/KSeF-like output for other sandbox/demo profiles. Production use requires official schema validation, certified provider or platform integration where applicable, country-specific legal review, and conformance testing.
+This MVP produces XRechnung UBL for Germany, AEAT-shaped local SIF record XML for Spain, and UBL-like/KSeF-like output for other evaluation profiles. Production use requires official schema validation, certified provider or platform integration where applicable, country-specific legal review, and conformance testing.
 
 ## Production Readiness Guardrails
 
@@ -92,7 +102,9 @@ The API includes explicit checks for the no-paid-network production path:
 - Germany can avoid a paid network provider, but must run official XRechnung/EN16931 validation such as KoSIT before a customer can rely on the output.
 - Poland can use the direct KSeF government API path, but still needs official FA(3) validation, KSeF API configuration, encryption/authentication, and customer-provided credentials.
 - Romania can use the direct ANAF/SPV path, but still needs RO_CIUS validation, ANAF API configuration, OAuth, upload/status polling, and signed response handling.
-- Spain can use a local SIF/non-VERI*FACTU-style path with enforced software identity and hash-chain evidence, but still needs official record validation, signing, responsible-declaration readiness, and customer-specific compliance review.
+- Spain can use a local SIF/non-VERI*FACTU-style path with enforced software identity, VERI*FACTU capability metadata, record/event hash-chain evidence, and QR draft generation, but still needs official record validation, signing, immutable event logging, AEAT external test evidence, responsible-declaration readiness, and customer-specific compliance review.
+
+Spain details are documented in [docs/spain_sif_readiness.md](docs/spain_sif_readiness.md).
 
 Check blockers:
 
@@ -108,7 +120,7 @@ curl -s -X POST http://localhost:8000/v1/invoices/{invoice_id}/official-validate
   -H "X-API-Key: local-dev-key"
 ```
 
-Validator commands are configured through environment variables such as `XRECHNUNG_VALIDATOR_COMMAND`, `KSEF_SCHEMA_VALIDATOR_COMMAND`, `RO_EFACTURA_SCHEMA_VALIDATOR_COMMAND`, and `SPANISH_SIF_VALIDATOR_COMMAND`. Commands receive the XML file path as the final argument unless the command contains a `{xml}` placeholder.
+Validator commands are configured through environment variables such as `XRECHNUNG_VALIDATOR_COMMAND`, `KSEF_SCHEMA_VALIDATOR_COMMAND`, `RO_EFACTURA_SCHEMA_VALIDATOR_COMMAND`, and `SPANISH_SIF_VALIDATOR_COMMAND`. Commands receive the XML file path as the final argument unless the command contains a `{xml}` placeholder. Spain production readiness also checks `SPANISH_SIF_SIGNING_COMMAND` or `SPANISH_SIF_SIGNING_CONFIGURED`, `SPANISH_SIF_EVENT_LOG_CONFIGURED`, `SPANISH_SIF_AEAT_TEST_PORTAL_VALIDATED`, `SPANISH_VERIFACTU_SUBMISSION_CAPABLE`, and `SPANISH_SIF_RESPONSIBLE_DECLARATION_READY`.
 
 Set up the free KoSIT/XRechnung validator locally:
 
@@ -118,6 +130,15 @@ export XRECHNUNG_VALIDATOR_COMMAND="vendor/xrechnung/validate-xrechnung.sh {xml}
 ```
 
 The Docker image installs Java and the KoSIT validator artifacts automatically, then sets `XRECHNUNG_VALIDATOR_COMMAND` for the container.
+
+Set up the AEAT Spain SIF WSDL/XSD validator locally:
+
+```bash
+make setup-spanish-sif-assets
+export SPANISH_SIF_VALIDATOR_COMMAND="vendor/spanish-sif/validate-spanish-sif.sh {xml}"
+```
+
+The Docker image installs `xmllint`, downloads the AEAT WSDL/XSD assets, and sets `SPANISH_SIF_VALIDATOR_COMMAND` for the container.
 
 The sample Germany invoice in `examples/germany_valid_invoice.json` has been checked against KoSIT Validator `1.6.0` with XRechnung validator configuration `3.0.2` and accepted. Production use still requires validating each customer invoice.
 
@@ -196,7 +217,7 @@ curl -s -X POST http://localhost:8000/v1/invoices/validate \
   --data @examples/belgium_valid_invoice.json
 ```
 
-Validate no-paid-network/direct-government-sandbox profiles:
+Validate no-paid-network/direct-government mock profiles:
 
 ```bash
 curl -s -X POST http://localhost:8000/v1/invoices/validate \

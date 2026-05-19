@@ -31,3 +31,14 @@ class OfficialValidationResponse(BaseModel):
     message: str
     stdout_excerpt: str | None = None
     stderr_excerpt: str | None = None
+
+
+class SpanishSIFResponsibleDeclarationResponse(BaseModel):
+    invoice_id: str
+    country: str
+    status: str
+    declaration_reference: str | None = None
+    producer: dict[str, object]
+    software: dict[str, object]
+    statement: str
+    external_requirements: list[str]

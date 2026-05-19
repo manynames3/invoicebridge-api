@@ -33,9 +33,9 @@ BE_B2B_PEPPOL_MVP = CountryProfileDefinition(
     required_format="PEPPOL_BIS_BILLING_3_UBL_LIKE",
     delivery_network="PEPPOL_MOCK",
     pdf_allowed_as_compliant_invoice=False,
-    implementation_status="MVP_SANDBOX",
+    implementation_status="NOT_READY_PRODUCTION_ROADMAP",
     notes=(
-        "Belgium B2B Peppol-style sandbox profile. This MVP does not perform official "
+        "Belgium B2B Peppol-style evaluation profile. This MVP does not perform official "
         "Peppol conformance, access point delivery, or legal certification."
     ),
     requires_buyer_routing_id=True,
@@ -52,7 +52,8 @@ BE_B2B_PEPPOL_MVP = CountryProfileDefinition(
         "audit_trail",
     ),
     production_readiness=(
-        "Sandbox workflow only; production Peppol access point and official conformance testing required."
+        "Not ready for production use. Production Peppol access point integration and official conformance testing "
+        "are required."
     ),
 )
 
@@ -65,7 +66,7 @@ DE_B2B_EN16931_MVP = CountryProfileDefinition(
     required_format="XRECHNUNG_3_0_UBL",
     delivery_network="CUSTOMER_MANAGED_DELIVERY_MOCK",
     pdf_allowed_as_compliant_invoice=False,
-    implementation_status="MVP_SANDBOX_NO_NETWORK",
+    implementation_status="READY_WITH_OFFICIAL_VALIDATION_REQUIRED",
     notes=(
         "Germany B2B structured invoice profile. This implementation validates German invoice data and transforms "
         "it into XRechnung 3.0 UBL XML for customer-managed delivery. Production reliance requires official "
@@ -97,12 +98,12 @@ PL_B2B_KSEF_MVP = CountryProfileDefinition(
     mandated=True,
     effective_date=date(2026, 2, 1),
     required_format="KSEF_FA3_XML_LIKE",
-    delivery_network="KSEF_GOV_SANDBOX_MOCK",
+    delivery_network="KSEF_GOV_MOCK",
     pdf_allowed_as_compliant_invoice=False,
-    implementation_status="MVP_SANDBOX_DIRECT_GOV_API_READY",
+    implementation_status="NOT_READY_PRODUCTION_ROADMAP",
     notes=(
-        "Poland KSeF sandbox profile. This MVP validates Polish NIP identifiers and transforms invoice data into "
-        "FA(3)-inspired XML-like output with a deterministic KSeF sandbox provider boundary; it does not authenticate "
+        "Poland KSeF evaluation profile. This MVP validates Polish NIP identifiers and transforms invoice data into "
+        "FA(3)-inspired XML-like output with a deterministic KSeF mock provider boundary; it does not authenticate "
         "with, submit to, or receive official receipts from production KSeF."
     ),
     requires_buyer_routing_id=False,
@@ -115,12 +116,13 @@ PL_B2B_KSEF_MVP = CountryProfileDefinition(
         "polish_nip_checksum",
         "ksef_fa3_like_xml_transform",
         "xml_export",
-        "ksef_sandbox_provider_reference",
+        "ksef_mock_provider_reference",
         "status_tracking",
         "audit_trail",
     ),
     production_readiness=(
-        "Sandbox workflow only; production KSeF credentials, encryption, API contract, and UPO handling required."
+        "Not ready for production use. Production KSeF credentials, encryption, API contract, and UPO handling are "
+        "required."
     ),
 )
 
@@ -131,12 +133,12 @@ RO_B2B_EFACTURA_MVP = CountryProfileDefinition(
     mandated=True,
     effective_date=date(2024, 1, 1),
     required_format="RO_CIUS_UBL_2_1_XML_LIKE",
-    delivery_network="RO_EFACTURA_GOV_SANDBOX_MOCK",
+    delivery_network="RO_EFACTURA_GOV_MOCK",
     pdf_allowed_as_compliant_invoice=False,
-    implementation_status="MVP_SANDBOX_DIRECT_GOV_API_READY",
+    implementation_status="NOT_READY_PRODUCTION_ROADMAP",
     notes=(
-        "Romania RO e-Factura sandbox profile. This MVP validates Romanian VAT identifiers and transforms invoice "
-        "data into RO_CIUS/UBL 2.1-inspired XML-like output with a deterministic ANAF sandbox provider boundary; "
+        "Romania RO e-Factura evaluation profile. This MVP validates Romanian VAT identifiers and transforms invoice "
+        "data into RO_CIUS/UBL 2.1-inspired XML-like output with a deterministic ANAF mock provider boundary; "
         "it does not authenticate with SPV, submit to ANAF, or download official signed responses."
     ),
     requires_buyer_routing_id=False,
@@ -149,12 +151,13 @@ RO_B2B_EFACTURA_MVP = CountryProfileDefinition(
         "romanian_cui_checksum",
         "ro_cius_ubl_like_xml_transform",
         "xml_export",
-        "anaf_sandbox_provider_reference",
+        "anaf_mock_provider_reference",
         "status_tracking",
         "audit_trail",
     ),
     production_readiness=(
-        "Sandbox workflow only; ANAF/SPV OAuth, upload status polling, and signed response handling required."
+        "Not ready for production use. ANAF/SPV OAuth, upload status polling, and signed response handling are "
+        "required."
     ),
 )
 
@@ -167,10 +170,11 @@ ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
     required_format="NON_VERIFACTU_FISCAL_RECORD_XML_LIKE",
     delivery_network="LOCAL_FISCAL_RECORD_MOCK",
     pdf_allowed_as_compliant_invoice=False,
-    implementation_status="MVP_SANDBOX_NO_NETWORK",
+    implementation_status="NOT_READY_EXTERNAL_VALIDATION_REQUIRED",
     notes=(
         "Spain NON-VERI*FACTU-style local SIF record profile. This MVP validates Spanish tax IDs, requires "
-        "software-system identity and hash-chain metadata, and generates local invoice record-integrity evidence. "
+        "software producer/system identity, VERI*FACTU capability metadata, event-log metadata, and hash-chain "
+        "metadata, then generates local invoice record-integrity evidence using AEAT-required hash input fields. "
         "It does not submit records to AEAT, certify SIF compliance, or implement the Spanish B2B exchange platform."
     ),
     requires_buyer_routing_id=False,
@@ -183,14 +187,19 @@ ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
         "spanish_tax_id_checksum",
         "non_verifactu_local_sif_record_transform",
         "xml_export",
+        "aeat_registro_alta_field_mapping",
+        "aeat_xsd_validation_setup",
         "sha256_record_hash_chain",
-        "qr_payload_candidate",
+        "sha256_event_hash_chain",
+        "aeat_qr_payload_draft",
+        "signing_command_interface",
+        "responsible_declaration_metadata",
         "status_tracking",
         "audit_trail",
     ),
     production_readiness=(
-        "Stronger local SIF evidence path; official SIF/VERI*FACTU validation, signing, declaration, and legal "
-        "review remain required."
+        "Not ready for production use. Official SIF/VERI*FACTU validation, signing, declaration, and legal review "
+        "remain required."
     ),
 )
 

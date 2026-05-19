@@ -1,4 +1,4 @@
-# ADR 0008: Model Direct Government Platform Profiles As Sandboxes
+# ADR 0008: Model Direct Government Platform Profiles With Mock Boundaries
 
 ## Status
 
@@ -10,10 +10,10 @@ Poland KSeF and Romania RO e-Factura are not Peppol access-point problems. They 
 
 ## Decision
 
-Add Poland and Romania as sandbox profiles behind the existing validator, transformer, provider, status, and audit contracts:
+Add Poland and Romania as not-ready-for-production profiles behind the existing validator, transformer, provider, status, and audit contracts:
 
-- `PL_B2B_KSEF_MVP` validates Polish NIP identifiers with checksum logic, supports PLN/EUR invoices, generates FA(3)-inspired XML-like output, and records deterministic KSeF sandbox provider references.
-- `RO_B2B_EFACTURA_MVP` validates Romanian VAT/CUI checksums, supports RON/EUR invoices, generates RO_CIUS/UBL 2.1-inspired XML-like output, and records deterministic ANAF sandbox provider references.
+- `PL_B2B_KSEF_MVP` validates Polish NIP identifiers with checksum logic, supports PLN/EUR invoices, generates FA(3)-inspired XML-like output, and records deterministic KSeF mock provider references.
+- `RO_B2B_EFACTURA_MVP` validates Romanian VAT/CUI checksums, supports RON/EUR invoices, generates RO_CIUS/UBL 2.1-inspired XML-like output, and records deterministic ANAF mock provider references.
 
 ## Consequences
 

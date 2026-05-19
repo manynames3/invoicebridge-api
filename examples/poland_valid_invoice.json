@@ -17,7 +17,7 @@
   "lines": [
     {
       "line_id": "1",
-      "description": "KSeF sandbox workflow",
+      "description": "KSeF evaluation workflow",
       "quantity": "2",
       "unit_price": "1000.00",
       "vat_rate": "23",

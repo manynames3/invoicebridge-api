@@ -1,11 +1,10 @@
 from decimal import Decimal
-from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
 from app.schemas.invoice import InvoiceLine, NormalizedInvoiceInput
 from app.schemas.validation import InvoiceValidationResponse
-from app.services.checksum import stable_payload_hash
 from app.services.money import money
+from app.services.spain_sif import build_aeat_registro_alta_xml
 from app.services.transform.base import BaseInvoiceTransformer
 
 CUSTOMIZATION_LABELS = {
@@ -28,13 +27,13 @@ def xml_name(namespace: str, tag: str) -> str:
 
 
 class UBLLikeTransformer(BaseInvoiceTransformer):
-    """Generate sandbox UBL-like XML for structured invoice profiles."""
+    """Generate non-production UBL-like XML for structured invoice profiles."""
 
     def transform(self, invoice: NormalizedInvoiceInput, validation: InvoiceValidationResponse) -> str:
-        root = ET.Element("InvoiceBridgeSandboxInvoice")
+        root = ET.Element("InvoiceBridgeStructuredInvoice")
         root.set("profile", validation.country_profile_used)
         root.set("format", validation.required_format)
-        root.set("legal_compliance", "sandbox_demo_only")
+        root.set("legal_compliance", "not_production_ready")
 
         ET.SubElement(root, "CustomizationID").text = CUSTOMIZATION_LABELS.get(
             validation.country_profile_used,
@@ -60,7 +59,7 @@ class UBLLikeTransformer(BaseInvoiceTransformer):
         name = getattr(party, "name", None) or ""
         vat_id = getattr(party, "vat_id", None) or ""
         routing_id = getattr(party, "routing_id", None) or getattr(party, "peppol_id", None) or ""
-        ET.SubElement(party_element, "EndpointID", schemeID="INVOICEBRIDGE_SANDBOX").text = routing_id
+        ET.SubElement(party_element, "EndpointID", schemeID="INVOICEBRIDGE_NON_PRODUCTION").text = routing_id
         ET.SubElement(party_element, "PartyName").text = name
         tax_scheme = ET.SubElement(party_element, "PartyTaxScheme")
         ET.SubElement(tax_scheme, "CompanyID").text = vat_id
@@ -281,180 +280,20 @@ class XRechnungUBLTransformer(BaseInvoiceTransformer):
 
 
 class FiscalRecordTransformer(BaseInvoiceTransformer):
-    """Generate sandbox XML-like fiscal record evidence for Spain NON-VERI*FACTU-style local mode."""
+    """Generate AEAT SIF RegistroAlta XML for Spain."""
 
     def transform(self, invoice: NormalizedInvoiceInput, validation: InvoiceValidationResponse) -> str:
-        current_hash = stable_payload_hash(self._record_payload(invoice, validation))
-
-        root = ET.Element("InvoiceBridgeSpanishSIFRecord")
-        root.set("profile", validation.country_profile_used)
-        root.set("format", validation.required_format)
-        root.set("legal_compliance", "local_record_candidate_not_aeat_certified")
-        root.set("certification_status", "not_certified")
-        ET.SubElement(root, "RecordType").text = "NON_VERIFACTU_LOCAL_SIF_RECORD"
-        ET.SubElement(root, "SIFMode").text = str(invoice.metadata.get("sif_mode", "NO_VERIFACTU")).upper()
-        ET.SubElement(root, "InvoiceNumber").text = invoice.invoice_number or ""
-        ET.SubElement(root, "IssueDate").text = invoice.issue_date.isoformat() if invoice.issue_date else ""
-        ET.SubElement(root, "RecordTimestamp").text = self._record_timestamp(invoice)
-        ET.SubElement(root, "Currency").text = invoice.currency or "EUR"
-
-        issuer = ET.SubElement(root, "Issuer")
-        ET.SubElement(issuer, "TaxID").text = getattr(invoice.seller, "vat_id", None) or ""
-        ET.SubElement(issuer, "Name").text = getattr(invoice.seller, "name", None) or ""
-
-        software = ET.SubElement(root, "SoftwareSystem")
-        ET.SubElement(software, "SoftwareSystemID").text = str(invoice.metadata.get("software_system_id", ""))
-        ET.SubElement(software, "SoftwareName").text = str(invoice.metadata.get("software_name", ""))
-        ET.SubElement(software, "SoftwareVersion").text = str(invoice.metadata.get("software_version", ""))
-        ET.SubElement(software, "InstallationNumber").text = str(invoice.metadata.get("installation_number", ""))
-        if invoice.metadata.get("responsible_declaration_reference"):
-            ET.SubElement(software, "ResponsibleDeclarationReference").text = str(
-                invoice.metadata["responsible_declaration_reference"]
-            )
-
-        parties = ET.SubElement(root, "Parties")
-        self._party(parties, "Seller", invoice.seller)
-        self._party(parties, "Buyer", invoice.buyer)
-
-        self._tax_breakdown(root, invoice, validation.normalized_totals.currency)
-
-        totals = validation.normalized_totals
-        total_element = ET.SubElement(root, "Totals")
-        ET.SubElement(total_element, "TaxExclusiveAmount", currencyID=totals.currency).text = self._amount(
-            totals.tax_exclusive_amount
-        )
-        ET.SubElement(total_element, "TaxAmount", currencyID=totals.currency).text = self._amount(totals.tax_amount)
-        ET.SubElement(total_element, "PayableAmount", currencyID=totals.currency).text = self._amount(
-            totals.payable_amount
-        )
-
-        chain = ET.SubElement(root, "RecordChain")
-        first_record = invoice.metadata.get("first_record") is True
-        ET.SubElement(chain, "FirstRecord").text = "true" if first_record else "false"
-        ET.SubElement(chain, "PreviousRecordHash").text = "" if first_record else str(
-            invoice.metadata.get("previous_record_hash", "")
-        )
-        ET.SubElement(chain, "CurrentRecordHash").text = current_hash
-        ET.SubElement(chain, "HashAlgorithm").text = "SHA-256"
-
-        ET.SubElement(root, "QRCodePayloadCandidate").text = self._qr_payload_candidate(
-            invoice,
-            validation,
-            current_hash,
-        )
-
-        evidence = ET.SubElement(root, "AuditEvidence")
-        ET.SubElement(evidence, "GeneratedBy").text = "InvoiceBridge API"
-        ET.SubElement(evidence, "EvidencePurpose").text = (
-            "Local Spain SIF record-integrity evidence; not AEAT submission or certification."
-        )
-
-        ET.indent(root, space="  ")
-        return ET.tostring(root, encoding="unicode", xml_declaration=True)
-
-    def _party(self, root: ET.Element, tag: str, party: object) -> None:
-        element = ET.SubElement(root, tag)
-        ET.SubElement(element, "Name").text = getattr(party, "name", None) or ""
-        ET.SubElement(element, "TaxID").text = getattr(party, "vat_id", None) or ""
-        ET.SubElement(element, "CountryCode").text = getattr(party, "country_code", None) or "ES"
-
-    def _tax_breakdown(self, root: ET.Element, invoice: NormalizedInvoiceInput, currency: str) -> None:
-        breakdown = ET.SubElement(root, "TaxBreakdown")
-        for item in self._tax_breakdown_payload(invoice):
-            rate = ET.SubElement(breakdown, "TaxRate")
-            ET.SubElement(rate, "Percent").text = item["vat_rate"]
-            ET.SubElement(rate, "TaxableAmount", currencyID=currency).text = item["taxable_amount"]
-            ET.SubElement(rate, "TaxAmount", currencyID=currency).text = item["tax_amount"]
-
-    def _tax_breakdown_payload(self, invoice: NormalizedInvoiceInput) -> list[dict[str, str]]:
-        breakdown: dict[Decimal, dict[str, Decimal]] = {}
-        for line in invoice.lines:
-            quantity = line.quantity or Decimal("0")
-            unit_price = line.unit_price or Decimal("0")
-            vat_rate = line.vat_rate or Decimal("0")
-            line_extension = money(quantity * unit_price)
-            line_tax = money(line_extension * vat_rate / Decimal("100"))
-            current = breakdown.setdefault(vat_rate, {"taxable": Decimal("0"), "tax": Decimal("0")})
-            current["taxable"] = money(current["taxable"] + line_extension)
-            current["tax"] = money(current["tax"] + line_tax)
-        return [
-            {
-                "vat_rate": self._decimal_text(rate),
-                "taxable_amount": self._amount(amounts["taxable"]),
-                "tax_amount": self._amount(amounts["tax"]),
-            }
-            for rate, amounts in sorted(breakdown.items(), key=lambda item: item[0])
-        ]
-
-    def _record_payload(
-        self,
-        invoice: NormalizedInvoiceInput,
-        validation: InvoiceValidationResponse,
-    ) -> dict[str, object]:
-        totals = validation.normalized_totals
-        return {
-            "country": "ES",
-            "profile": validation.country_profile_used,
-            "sif_mode": str(invoice.metadata.get("sif_mode", "NO_VERIFACTU")).upper(),
-            "invoice_number": invoice.invoice_number,
-            "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None,
-            "record_timestamp": self._record_timestamp(invoice),
-            "seller_vat_id": getattr(invoice.seller, "vat_id", None),
-            "buyer_vat_id": getattr(invoice.buyer, "vat_id", None),
-            "software_system_id": invoice.metadata.get("software_system_id"),
-            "software_version": invoice.metadata.get("software_version"),
-            "installation_number": invoice.metadata.get("installation_number"),
-            "previous_record_hash": invoice.metadata.get("previous_record_hash"),
-            "tax_breakdown": self._tax_breakdown_payload(invoice),
-            "totals": {
-                "tax_exclusive_amount": self._amount(totals.tax_exclusive_amount),
-                "tax_amount": self._amount(totals.tax_amount),
-                "payable_amount": self._amount(totals.payable_amount),
-                "currency": totals.currency,
-            },
-        }
-
-    def _record_timestamp(self, invoice: NormalizedInvoiceInput) -> str:
-        if invoice.metadata.get("record_timestamp"):
-            return str(invoice.metadata["record_timestamp"])
-        if invoice.issue_date:
-            return f"{invoice.issue_date.isoformat()}T00:00:00+01:00"
-        return ""
-
-    def _qr_payload_candidate(
-        self,
-        invoice: NormalizedInvoiceInput,
-        validation: InvoiceValidationResponse,
-        current_hash: str,
-    ) -> str:
-        issue_date = invoice.issue_date.strftime("%d-%m-%Y") if invoice.issue_date else ""
-        query = urlencode(
-            {
-                "nif": (getattr(invoice.seller, "vat_id", None) or "").removeprefix("ES"),
-                "numserie": invoice.invoice_number or "",
-                "fecha": issue_date,
-                "importe": self._amount(validation.normalized_totals.payable_amount),
-                "huella": current_hash,
-            }
-        )
-        base_url = str(invoice.metadata.get("qr_base_url") or "IB-ES-SIF-CANDIDATE")
-        return f"{base_url}?{query}"
-
-    def _amount(self, value: Decimal) -> str:
-        return f"{money(value):.2f}"
-
-    def _decimal_text(self, value: Decimal) -> str:
-        return format(value.normalize(), "f")
+        return build_aeat_registro_alta_xml(invoice, validation)
 
 
 class KSeFLikeTransformer(BaseInvoiceTransformer):
-    """Generate sandbox XML-like output inspired by Poland KSeF FA(3)."""
+    """Generate non-production XML-like output inspired by Poland KSeF FA(3)."""
 
     def transform(self, invoice: NormalizedInvoiceInput, validation: InvoiceValidationResponse) -> str:
         root = ET.Element("InvoiceBridgeKSeFInvoice")
         root.set("profile", validation.country_profile_used)
         root.set("format", validation.required_format)
-        root.set("legal_compliance", "sandbox_demo_only")
+        root.set("legal_compliance", "not_production_ready")
         ET.SubElement(root, "SchemaCode").text = str(invoice.metadata.get("ksef_schema_version", "FA(3)"))
         ET.SubElement(root, "InvoiceNumber").text = invoice.invoice_number or ""
         ET.SubElement(root, "IssueDate").text = invoice.issue_date.isoformat() if invoice.issue_date else ""

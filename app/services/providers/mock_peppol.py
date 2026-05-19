@@ -64,7 +64,7 @@ class MockPeppolProvider(BaseEInvoiceProvider):
                     "mode": "mock_peppol_access_point",
                     "external_network_submission": False,
                     "submission_channel": "peppol_mock",
-                    "legal_compliance": "sandbox_demo_only",
+                    "legal_compliance": "not_production_ready",
                 },
             },
         )

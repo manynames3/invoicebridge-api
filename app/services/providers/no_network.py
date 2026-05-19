@@ -4,6 +4,7 @@ from app.core.config import get_settings
 from app.db.models import Invoice
 from app.services.checksum import stable_payload_hash
 from app.services.providers.base import BaseEInvoiceProvider, ProviderSubmissionResult
+from app.services.spain_sif import SPANISH_SIF_TEST_REQUERIMIENTO_ENDPOINT, SPANISH_SIF_TEST_VERIFACTU_ENDPOINT
 
 
 class BaseNoNetworkProvider(BaseEInvoiceProvider):
@@ -60,7 +61,7 @@ class BaseNoNetworkProvider(BaseEInvoiceProvider):
                     "external_network_submission": False,
                     "external_government_submission": self.external_government_submission,
                     "submission_channel": self.submission_channel,
-                    "legal_compliance": "sandbox_demo_only",
+                    "legal_compliance": "not_production_ready",
                 },
             },
         )
@@ -75,18 +76,35 @@ class CustomerManagedDeliveryProvider(BaseNoNetworkProvider):
 class LocalFiscalRecordProvider(BaseNoNetworkProvider):
     network = "LOCAL_FISCAL_RECORD_MOCK"
     reference_prefix = "LOCAL-ES-FISCAL"
-    mode = "local_fiscal_record_evidence"
+    mode = "local_sif_record_evidence"
+
+    def _result(
+        self,
+        status: str,
+        provider_reference: str,
+        rejection_reason: str | None,
+        metadata: dict,
+    ) -> ProviderSubmissionResult:
+        result = super()._result(status, provider_reference, rejection_reason, metadata)
+        result.response_payload["metadata"].update(
+            {
+                "aeat_test_verifactu_endpoint": SPANISH_SIF_TEST_VERIFACTU_ENDPOINT,
+                "aeat_test_requerimiento_endpoint": SPANISH_SIF_TEST_REQUERIMIENTO_ENDPOINT,
+                "official_aeat_submission_performed": False,
+            }
+        )
+        return result
 
 
-class KSeFSandboxProvider(BaseNoNetworkProvider):
-    network = "KSEF_GOV_SANDBOX_MOCK"
-    reference_prefix = "KSEF-PL-SANDBOX"
-    mode = "ksef_government_api_sandbox"
-    submission_channel = "direct_government_platform_sandbox"
+class KSeFMockProvider(BaseNoNetworkProvider):
+    network = "KSEF_GOV_MOCK"
+    reference_prefix = "KSEF-PL-MOCK"
+    mode = "ksef_government_api_mock"
+    submission_channel = "direct_government_platform_mock"
 
 
-class ROEFacturaSandboxProvider(BaseNoNetworkProvider):
-    network = "RO_EFACTURA_GOV_SANDBOX_MOCK"
-    reference_prefix = "ANAF-RO-SANDBOX"
-    mode = "ro_efactura_government_api_sandbox"
-    submission_channel = "direct_government_platform_sandbox"
+class ROEFacturaMockProvider(BaseNoNetworkProvider):
+    network = "RO_EFACTURA_GOV_MOCK"
+    reference_prefix = "ANAF-RO-MOCK"
+    mode = "ro_efactura_government_api_mock"
+    submission_channel = "direct_government_platform_mock"

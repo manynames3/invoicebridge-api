@@ -89,7 +89,7 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
         if self.profile.name == ES_B2B_NON_VERIFACTU_MVP.name:
             return "local_fiscal_record_no_network"
         if self.profile.name in {PL_B2B_KSEF_MVP.name, RO_B2B_EFACTURA_MVP.name}:
-            return "direct_government_platform_sandbox"
+            return "direct_government_platform_mock"
         return "customer_managed_no_network"
 
     def _validate_header(self, invoice: NormalizedInvoiceInput, errors: list[ValidationIssue]) -> None:
@@ -198,7 +198,7 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
                     ValidationIssue(
                         code="MISSING_KSEF_SCHEMA_VERSION",
                         field="metadata.ksef_schema_version",
-                        message="Poland KSeF sandbox profiles should identify the target FA schema version.",
+                        message="Poland KSeF evaluation profiles should identify the target FA schema version.",
                     )
                 )
             if self.profile.name == RO_B2B_EFACTURA_MVP.name and not invoice.metadata.get("anaf_submission_context"):
@@ -238,6 +238,10 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
             )
 
         required_fields = {
+            "invoice_type": "invoice type, such as F1 for a full invoice",
+            "software_producer_tax_id": "software producer tax ID",
+            "software_producer_name": "software producer name",
+            "software_system_code": "official two-character software system code",
             "software_system_id": "software system identifier",
             "software_name": "software name",
             "software_version": "software version",
@@ -253,6 +257,36 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
                         message=f"Spain local fiscal-record evidence requires {label}.",
                     )
                 )
+
+        if metadata.get("verifactu_capable") is not True:
+            errors.append(
+                ValidationIssue(
+                    code="MISSING_VERIFACTU_CAPABILITY",
+                    field="metadata.verifactu_capable",
+                    message=(
+                        "Spain SIF products must be capable of VERI*FACTU operation even when used in "
+                        "NO_VERIFACTU mode."
+                    ),
+                )
+            )
+        if metadata.get("event_log_enabled") is not True:
+            errors.append(
+                ValidationIssue(
+                    code="MISSING_EVENT_LOG_ENABLED",
+                    field="metadata.event_log_enabled",
+                    message="Spain NO_VERIFACTU mode requires local SIF event logging.",
+                )
+            )
+
+        system_code = metadata.get("software_system_code")
+        if system_code and len(str(system_code)) > 2:
+            errors.append(
+                ValidationIssue(
+                    code="INVALID_SOFTWARE_SYSTEM_CODE",
+                    field="metadata.software_system_code",
+                    message="Spain software_system_code must fit the AEAT two-character IdSistemaInformatico field.",
+                )
+            )
 
         record_timestamp = metadata.get("record_timestamp")
         if record_timestamp:
@@ -280,12 +314,41 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
                     ),
                 )
             )
+        if not first_record:
+            for field_name in ("previous_record_invoice_number", "previous_record_issue_date"):
+                if not metadata.get(field_name):
+                    errors.append(
+                        ValidationIssue(
+                            code=f"MISSING_{field_name.upper()}",
+                            field=f"metadata.{field_name}",
+                            message="Spain record chaining requires the previous invoice number and issue date.",
+                        )
+                    )
         if previous_hash and not HEX_64_PATTERN.match(str(previous_hash)):
             errors.append(
                 ValidationIssue(
                     code="INVALID_PREVIOUS_RECORD_HASH",
                     field="metadata.previous_record_hash",
                     message="Spain previous_record_hash must be a 64-character hexadecimal SHA-256 hash.",
+                )
+            )
+
+        first_event = metadata.get("first_event") is True
+        previous_event_hash = metadata.get("previous_event_hash")
+        if not first_event and not previous_event_hash:
+            errors.append(
+                ValidationIssue(
+                    code="MISSING_PREVIOUS_EVENT_HASH",
+                    field="metadata.previous_event_hash",
+                    message="Spain NO_VERIFACTU mode requires previous event hash unless first_event is true.",
+                )
+            )
+        if previous_event_hash and not HEX_64_PATTERN.match(str(previous_event_hash)):
+            errors.append(
+                ValidationIssue(
+                    code="INVALID_PREVIOUS_EVENT_HASH",
+                    field="metadata.previous_event_hash",
+                    message="Spain previous_event_hash must be a 64-character hexadecimal SHA-256 hash.",
                 )
             )
 

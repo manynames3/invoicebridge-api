@@ -2,9 +2,9 @@ from app.services.providers.base import BaseEInvoiceProvider
 from app.services.providers.mock_peppol import MockPeppolProvider
 from app.services.providers.no_network import (
     CustomerManagedDeliveryProvider,
-    KSeFSandboxProvider,
+    KSeFMockProvider,
     LocalFiscalRecordProvider,
-    ROEFacturaSandboxProvider,
+    ROEFacturaMockProvider,
 )
 
 
@@ -15,8 +15,8 @@ def get_provider_for_network(network: str) -> BaseEInvoiceProvider:
         return CustomerManagedDeliveryProvider()
     if network == LocalFiscalRecordProvider.network:
         return LocalFiscalRecordProvider()
-    if network == KSeFSandboxProvider.network:
-        return KSeFSandboxProvider()
-    if network == ROEFacturaSandboxProvider.network:
-        return ROEFacturaSandboxProvider()
+    if network == KSeFMockProvider.network:
+        return KSeFMockProvider()
+    if network == ROEFacturaMockProvider.network:
+        return ROEFacturaMockProvider()
     raise ValueError(f"Unsupported provider network: {network}")

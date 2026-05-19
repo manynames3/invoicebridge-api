@@ -179,13 +179,22 @@ def test_spain_invoice_rejects_missing_sif_record_metadata(
     body = response.json()
     assert body["compliant"] is False
     assert {error["code"] for error in body["errors"]} == {
+        "MISSING_EVENT_LOG_ENABLED",
         "MISSING_INSTALLATION_NUMBER",
+        "MISSING_INVOICE_TYPE",
+        "MISSING_PREVIOUS_EVENT_HASH",
+        "MISSING_PREVIOUS_RECORD_INVOICE_NUMBER",
         "MISSING_PREVIOUS_RECORD_HASH",
+        "MISSING_PREVIOUS_RECORD_ISSUE_DATE",
         "MISSING_RECORD_TIMESTAMP",
         "MISSING_SIF_MODE",
+        "MISSING_SOFTWARE_PRODUCER_NAME",
+        "MISSING_SOFTWARE_PRODUCER_TAX_ID",
+        "MISSING_SOFTWARE_SYSTEM_CODE",
         "MISSING_SOFTWARE_NAME",
         "MISSING_SOFTWARE_SYSTEM_ID",
         "MISSING_SOFTWARE_VERSION",
+        "MISSING_VERIFACTU_CAPABILITY",
     }
     assert {warning["code"] for warning in body["warnings"]} == {"MISSING_RESPONSIBLE_DECLARATION_REFERENCE"}
 
@@ -207,6 +216,28 @@ def test_spain_invoice_rejects_invalid_previous_record_hash(
     assert "INVALID_PREVIOUS_RECORD_HASH" in {error["code"] for error in body["errors"]}
 
 
+def test_spain_invoice_requires_verifactu_capability_and_event_log(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    invoice = dict(spain_invoice)
+    invoice["metadata"] = dict(spain_invoice["metadata"])
+    invoice["metadata"]["verifactu_capable"] = False
+    invoice["metadata"]["event_log_enabled"] = False
+    invoice["metadata"]["previous_event_hash"] = "invalid"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    codes = {error["code"] for error in body["errors"]}
+    assert "MISSING_VERIFACTU_CAPABILITY" in codes
+    assert "MISSING_EVENT_LOG_ENABLED" in codes
+    assert "INVALID_PREVIOUS_EVENT_HASH" in codes
+
+
 def test_poland_invoice_validates_with_nip_checksum(
     client: TestClient,
     auth_headers: dict[str, str],
@@ -220,7 +251,7 @@ def test_poland_invoice_validates_with_nip_checksum(
     assert body["errors"] == []
     assert body["required_format"] == "KSEF_FA3_XML_LIKE"
     assert body["country_profile_used"] == "PL_B2B_KSEF_MVP"
-    assert body["metadata"]["delivery_network"] == "KSEF_GOV_SANDBOX_MOCK"
+    assert body["metadata"]["delivery_network"] == "KSEF_GOV_MOCK"
 
 
 def test_poland_invoice_rejects_bad_nip_checksum(
@@ -240,7 +271,7 @@ def test_poland_invoice_rejects_bad_nip_checksum(
     assert "INVALID_BUYER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
 
 
-def test_romania_invoice_validates_for_government_platform_sandbox(
+def test_romania_invoice_validates_for_government_platform_mock(
     client: TestClient,
     auth_headers: dict[str, str],
     romania_invoice: dict,
@@ -253,7 +284,7 @@ def test_romania_invoice_validates_for_government_platform_sandbox(
     assert body["errors"] == []
     assert body["required_format"] == "RO_CIUS_UBL_2_1_XML_LIKE"
     assert body["country_profile_used"] == "RO_B2B_EFACTURA_MVP"
-    assert body["metadata"]["delivery_model"] == "direct_government_platform_sandbox"
+    assert body["metadata"]["delivery_model"] == "direct_government_platform_mock"
 
 
 def test_romania_invoice_rejects_bad_cui_checksum(

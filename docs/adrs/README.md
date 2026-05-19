@@ -9,5 +9,6 @@ These ADRs capture the main architecture choices for the InvoiceBridge API MVP.
 - [ADR 0005: Use Docker Compose And PostgreSQL For Local Runtime](0005-docker-compose-postgres-runtime.md)
 - [ADR 0006: Use Single-Cloud Multi-Region Before Multi-Cloud](0006-single-cloud-multi-region-first.md)
 - [ADR 0007: Model No-Network Country Profiles Explicitly](0007-no-network-country-profiles.md)
-- [ADR 0008: Model Direct Government Platform Profiles As Sandboxes](0008-direct-government-platform-sandboxes.md)
+- [ADR 0008: Model Direct Government Platform Profiles With Mock Boundaries](0008-direct-government-platform-mocks.md)
 - [ADR 0009: Production Readiness Guardrails](0009-production-readiness-guardrails.md)
+- [ADR 0010: Treat Spain SIF As A Readiness Boundary](0010-spain-sif-readiness-boundary.md)
