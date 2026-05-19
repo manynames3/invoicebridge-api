@@ -2,7 +2,7 @@
 
 InvoiceBridge API is a modular FastAPI service for the e-invoicing compliance workflow: accept normalized invoice JSON, select a country mandate profile, validate compliance rules, transform valid invoices into sandbox structured outputs, submit or record through a mock provider, track status, and persist an audit trail.
 
-The MVP supports five country profiles: Belgium B2B Peppol-style, Germany EN 16931/XRechnung-style customer-managed delivery, Poland KSeF FA(3)-style, Romania RO e-Factura/RO_CIUS-style, and Spain NON-VERI*FACTU-style local fiscal-record evidence. The design keeps mandate rules, validators, transformers, and providers separate so additional countries or real network providers can be added without rewriting the HTTP API.
+The MVP supports five country profiles: Belgium B2B Peppol-style, Germany XRechnung 3.0 UBL customer-managed delivery, Poland KSeF FA(3)-style, Romania RO e-Factura/RO_CIUS-style, and Spain NON-VERI*FACTU-style local SIF record evidence. The design keeps mandate rules, validators, transformers, and providers separate so additional countries or real network providers can be added without rewriting the HTTP API.
 
 ## C4-Style Container Diagram
 
@@ -16,7 +16,7 @@ flowchart TB
     service["InvoiceService\nworkflow orchestration"]
     profiles["Country Profile Registry\nBE, DE, PL, RO, ES MVP profiles"]
     validators["Validation Registry\nBEPeppolMVPValidator\nStructured profile validators"]
-    transformers["Transform Registry\nUBL-like, KSeF-like,\nFiscalRecord transformers"]
+    transformers["Transform Registry\nUBL-like, XRechnung,\nKSeF-like, Spanish SIF transformers"]
     providers["Provider Registry\nPeppol, no-network,\ngovernment sandbox providers"]
     tenants["Tenant Service\nhome + failover region routing"]
     audit["Audit Service\npayload hashes + event metadata"]
@@ -87,10 +87,10 @@ More detail is in [multi_region.md](multi_region.md) and [cloud_deployment_patte
 4. The selected validator checks required fields, country-specific VAT/tax ID syntax and checksums where implemented, routing requirements when applicable, currency, VAT rates, line amounts, tax totals, and payable total consistency.
 5. If `tenant_id` is supplied, the service checks the tenant home/failover region before creating invoice records.
 6. On validation failure, the service records an invoice record plus `invoice_received` and `validation_failed` audit events.
-7. On validation success, the transformer registry selects `UBLLikeTransformer` for Belgium/Germany/Romania, `KSeFLikeTransformer` for Poland, or `FiscalRecordTransformer` for Spain.
+7. On validation success, the transformer registry selects `UBLLikeTransformer` for Belgium/Romania, `XRechnungUBLTransformer` for Germany, `KSeFLikeTransformer` for Poland, or `FiscalRecordTransformer` for Spain local SIF records.
 8. Transform and validation outputs are persisted with audit events and SHA-256 payload hashes.
 9. Transform responses include the document download URL and SHA-256 hash.
-10. `/v1/invoices/{invoice_id}/document` returns the stored sandbox XML document for export/testing after transformation.
+10. `/v1/invoices/{invoice_id}/document` returns the stored XML document for export/testing after transformation.
 11. `/send` resolves an existing invoice or first transforms a payload, then uses the configured mock provider through the provider registry.
 12. Provider responses include provider metadata, update invoice delivery status, and create `submitted`, `accepted`, `rejected`, `pending`, or `retried` audit events.
 13. `/v1/compliance/production-readiness` returns explicit blockers for no-paid-network production use.
@@ -112,7 +112,7 @@ A local multi-region simulation is available through `docker-compose.multi-regio
 
 ## Key Constraints
 
-- The XML output is UBL-like, KSeF-like, or fiscal-record XML-like, not official schema-validated UBL, XRechnung, KSeF, RO e-Factura, Peppol, VERI*FACTU, or Spain B2B platform output.
+- Germany XML is generated as XRechnung 3.0 UBL and must pass the configured KoSIT validator before production reliance; Spain output includes required local SIF software identity, hash-chain, tax-breakdown, and QR payload candidate data but is not AEAT-certified; other country XML remains sandbox/profile-like output.
 - Providers are deterministic mock providers, not certified access points, KSeF submissions, ANAF/SPV submissions, or Spanish SIF certification.
 - Production readiness is guarded by configuration checks and official-validator command hooks, but the repository cannot supply customer credentials, legal review, or authority certification.
 - The API currently has static country profiles and lightweight tenant routing metadata, not a full tenant auth/account model.

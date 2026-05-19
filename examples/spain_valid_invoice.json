@@ -34,7 +34,13 @@
   },
   "payment_terms": "Payment due within 30 days",
   "metadata": {
+    "sif_mode": "NO_VERIFACTU",
     "software_system_id": "IB-SANDBOX-SIF-001",
-    "previous_record_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    "software_name": "InvoiceBridge SIF Test Harness",
+    "software_version": "0.1.0",
+    "installation_number": "IB-ES-INSTALL-001",
+    "record_timestamp": "2026-03-05T10:15:00+01:00",
+    "previous_record_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "responsible_declaration_reference": "IB-SIF-DECLARATION-DEMO-001"
   }
 }

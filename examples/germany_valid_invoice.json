@@ -3,16 +3,33 @@
   "transaction_type": "B2B",
   "invoice_number": "INV-DE-2026-0001",
   "issue_date": "2026-02-10",
+  "due_date": "2026-03-12",
   "currency": "EUR",
   "seller": {
     "name": "Acme Deutschland GmbH",
     "vat_id": "DE123456788",
-    "country_code": "DE"
+    "country_code": "DE",
+    "address": {
+      "street": "Friedrichstrasse 100",
+      "city": "Berlin",
+      "postal_code": "10117",
+      "country_code": "DE",
+      "contact_name": "Billing Team",
+      "phone": "+49301234567",
+      "email": "billing@example.de"
+    }
   },
   "buyer": {
     "name": "Globex Deutschland GmbH",
     "vat_id": "DE987654328",
-    "country_code": "DE"
+    "country_code": "DE",
+    "address": {
+      "street": "Kaufingerstrasse 12",
+      "city": "Munich",
+      "postal_code": "80331",
+      "country_code": "DE",
+      "email": "ap@example.de"
+    }
   },
   "lines": [
     {
@@ -32,5 +49,10 @@
     "tax_inclusive_amount": "357.00",
     "payable_amount": "357.00"
   },
-  "payment_terms": "Payment due within 30 days"
+  "payment_terms": "Payment due within 30 days",
+  "metadata": {
+    "buyer_reference": "DE-BUYER-REF-2026-0001",
+    "seller_iban": "DE89370400440532013000",
+    "payment_means_code": "58"
+  }
 }

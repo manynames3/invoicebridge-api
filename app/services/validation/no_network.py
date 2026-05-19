@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Protocol
 
@@ -18,6 +19,7 @@ DE_VAT_ID_PATTERN = re.compile(r"^DE[0-9]{9}$")
 PL_NIP_PATTERN = re.compile(r"^PL[0-9]{10}$")
 RO_VAT_ID_PATTERN = re.compile(r"^RO[0-9]{2,10}$")
 ES_VAT_ID_PATTERN = re.compile(r"^ES[A-Z0-9][A-Z0-9]{7}[A-Z0-9]$")
+HEX_64_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 SPANISH_NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 SPANISH_CIF_CONTROL_LETTERS = "JABCDEFGHI"
 
@@ -51,7 +53,7 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
 
         self._validate_header(invoice, errors)
         self._validate_parties(invoice, errors)
-        self._validate_profile_specific_metadata(invoice, warnings)
+        self._validate_profile_specific_metadata(invoice, errors, warnings)
         line_totals = self._validate_lines(invoice, errors, warnings)
 
         tax_exclusive_amount = money(sum((item[0] for item in line_totals), Decimal("0")))
@@ -185,9 +187,12 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
     def _validate_profile_specific_metadata(
         self,
         invoice: NormalizedInvoiceInput,
+        errors: list[ValidationIssue],
         warnings: list[ValidationIssue],
     ) -> None:
         if self.profile.name != ES_B2B_NON_VERIFACTU_MVP.name:
+            if self.profile.name == DE_B2B_EN16931_MVP.name:
+                self._validate_germany_xrechnung_metadata(invoice, errors)
             if self.profile.name == PL_B2B_KSEF_MVP.name and not invoice.metadata.get("ksef_schema_version"):
                 warnings.append(
                     ValidationIssue(
@@ -205,22 +210,160 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
                     )
                 )
             return
-        if not invoice.metadata.get("software_system_id"):
-            warnings.append(
+        self._validate_spain_sif_metadata(invoice, errors, warnings)
+
+    def _validate_spain_sif_metadata(
+        self,
+        invoice: NormalizedInvoiceInput,
+        errors: list[ValidationIssue],
+        warnings: list[ValidationIssue],
+    ) -> None:
+        metadata = invoice.metadata
+        sif_mode = str(metadata.get("sif_mode") or "").upper()
+        if not sif_mode:
+            errors.append(
                 ValidationIssue(
-                    code="MISSING_SOFTWARE_SYSTEM_ID",
-                    field="metadata.software_system_id",
-                    message="Spain fiscal-record profiles should identify the invoicing software system.",
+                    code="MISSING_SIF_MODE",
+                    field="metadata.sif_mode",
+                    message="Spain local-record mode requires metadata.sif_mode set to NO_VERIFACTU.",
                 )
             )
-        if not invoice.metadata.get("previous_record_hash"):
-            warnings.append(
+        elif sif_mode != "NO_VERIFACTU":
+            errors.append(
+                ValidationIssue(
+                    code="INVALID_SIF_MODE",
+                    field="metadata.sif_mode",
+                    message="This MVP implements only Spain NO_VERIFACTU local-record mode.",
+                )
+            )
+
+        required_fields = {
+            "software_system_id": "software system identifier",
+            "software_name": "software name",
+            "software_version": "software version",
+            "installation_number": "installation number",
+            "record_timestamp": "record generation timestamp",
+        }
+        for field_name, label in required_fields.items():
+            if not metadata.get(field_name):
+                errors.append(
+                    ValidationIssue(
+                        code=f"MISSING_{field_name.upper()}",
+                        field=f"metadata.{field_name}",
+                        message=f"Spain local fiscal-record evidence requires {label}.",
+                    )
+                )
+
+        record_timestamp = metadata.get("record_timestamp")
+        if record_timestamp:
+            try:
+                datetime.fromisoformat(str(record_timestamp).replace("Z", "+00:00"))
+            except ValueError:
+                errors.append(
+                    ValidationIssue(
+                        code="INVALID_RECORD_TIMESTAMP",
+                        field="metadata.record_timestamp",
+                        message="Spain record_timestamp must be an ISO 8601 datetime.",
+                    )
+                )
+
+        first_record = metadata.get("first_record") is True
+        previous_hash = metadata.get("previous_record_hash")
+        if not first_record and not previous_hash:
+            errors.append(
                 ValidationIssue(
                     code="MISSING_PREVIOUS_RECORD_HASH",
                     field="metadata.previous_record_hash",
-                    message="Previous record hash is recommended for chained local fiscal record evidence.",
+                    message=(
+                        "Spain local fiscal-record evidence requires the previous record hash unless first_record "
+                        "is true."
+                    ),
                 )
             )
+        if previous_hash and not HEX_64_PATTERN.match(str(previous_hash)):
+            errors.append(
+                ValidationIssue(
+                    code="INVALID_PREVIOUS_RECORD_HASH",
+                    field="metadata.previous_record_hash",
+                    message="Spain previous_record_hash must be a 64-character hexadecimal SHA-256 hash.",
+                )
+            )
+
+        if not metadata.get("responsible_declaration_reference"):
+            warnings.append(
+                ValidationIssue(
+                    code="MISSING_RESPONSIBLE_DECLARATION_REFERENCE",
+                    field="metadata.responsible_declaration_reference",
+                    message="Production Spain SIF use needs customer/software responsible-declaration evidence.",
+                )
+            )
+
+    def _validate_germany_xrechnung_metadata(
+        self,
+        invoice: NormalizedInvoiceInput,
+        errors: list[ValidationIssue],
+    ) -> None:
+        if not invoice.metadata.get("buyer_reference"):
+            errors.append(
+                ValidationIssue(
+                    code="MISSING_BUYER_REFERENCE",
+                    field="metadata.buyer_reference",
+                    message="Germany XRechnung output requires a buyer reference.",
+                )
+            )
+        if invoice.due_date is None:
+            errors.append(
+                ValidationIssue(
+                    code="MISSING_DUE_DATE",
+                    field="due_date",
+                    message="Germany XRechnung output requires a due date for standard payment terms.",
+                )
+            )
+        self._validate_germany_address(invoice.seller, "seller", errors)
+        self._validate_germany_address(invoice.buyer, "buyer", errors)
+        self._validate_germany_seller_contact(invoice.seller, errors)
+
+    def _validate_germany_address(
+        self,
+        party: object,
+        party_name: str,
+        errors: list[ValidationIssue],
+    ) -> None:
+        if party is None:
+            return
+        address = getattr(party, "address", None) or {}
+        for key in ("street", "city", "postal_code", "country_code"):
+            if not address.get(key):
+                errors.append(
+                    ValidationIssue(
+                        code=f"MISSING_{party_name.upper()}_ADDRESS_{key.upper()}",
+                        field=f"{party_name}.address.{key}",
+                        message=f"Germany XRechnung output requires {party_name} address {key}.",
+                    )
+                )
+
+    def _validate_germany_seller_contact(
+        self,
+        party: object,
+        errors: list[ValidationIssue],
+    ) -> None:
+        if party is None:
+            return
+        address = getattr(party, "address", None) or {}
+        required_fields = {
+            "contact_name": "seller contact point",
+            "phone": "seller contact telephone number",
+            "email": "seller contact email address",
+        }
+        for key, label in required_fields.items():
+            if not address.get(key):
+                errors.append(
+                    ValidationIssue(
+                        code=f"MISSING_SELLER_{key.upper()}",
+                        field=f"seller.address.{key}",
+                        message=f"Germany XRechnung output requires {label}.",
+                    )
+                )
 
     def _validate_lines(
         self,

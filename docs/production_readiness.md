@@ -13,10 +13,10 @@ InvoiceBridge can support no-paid-provider paths, but that is not the same as no
 
 | Country | No-paid-provider path | Must be configured before production reliance |
 |---|---|---|
-| Germany | Customer-managed structured e-invoice exchange | Official XRechnung/EN16931 validation, such as a KoSIT validator command |
+| Germany | Customer-managed structured e-invoice exchange | Passing official XRechnung/EN16931 validation, such as a KoSIT validator command |
 | Poland | Direct KSeF government API | FA(3) schema validation, KSeF API URL, encryption/authentication, customer KSeF credentials/certificates, UPO handling |
 | Romania | Direct ANAF/SPV API | RO_CIUS validation, ANAF API URL, SPV/OAuth credentials, upload/status polling, signed response handling |
-| Spain | Local SIF/non-VERI*FACTU-style record controls | Official SIF record validation, record signing, QR/hash/event-log requirements, responsible declaration readiness |
+| Spain | Local SIF/non-VERI*FACTU-style record controls with software identity and SHA-256 hash chaining | Official SIF record validation, record signing, QR/hash/event-log requirements, responsible declaration readiness |
 
 ## Configuration
 
@@ -34,6 +34,17 @@ SPANISH_SIF_RESPONSIBLE_DECLARATION_READY=false
 ```
 
 Validator commands receive the XML path as the final argument unless the command contains a `{xml}` placeholder.
+
+Install the free KoSIT/XRechnung validator artifacts:
+
+```bash
+make setup-xrechnung-validator
+export XRECHNUNG_VALIDATOR_COMMAND="vendor/xrechnung/validate-xrechnung.sh {xml}"
+```
+
+The Docker image installs Java plus the KoSIT validator/configuration artifacts and sets `XRECHNUNG_VALIDATOR_COMMAND` automatically.
+
+The bundled Germany example invoice was checked locally against KoSIT Validator `1.6.0` with XRechnung validator configuration `3.0.2` and was accepted. Customer payloads must still be validated invoice by invoice.
 
 ## Production Boundary
 

@@ -65,7 +65,7 @@ def test_germany_invoice_validates_without_buyer_routing_id(
     body = response.json()
     assert body["compliant"] is True
     assert body["errors"] == []
-    assert body["required_format"] == "XRECHNUNG_EN16931_UBL_LIKE"
+    assert body["required_format"] == "XRECHNUNG_3_0_UBL"
     assert body["country_profile_used"] == "DE_B2B_EN16931_MVP"
     assert body["metadata"]["delivery_network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
 
@@ -85,6 +85,33 @@ def test_germany_invoice_rejects_bad_vat_id_checksum(
     body = response.json()
     assert body["compliant"] is False
     assert "INVALID_SELLER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
+
+
+def test_germany_invoice_requires_xrechnung_business_fields(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    invoice = dict(germany_invoice)
+    invoice.pop("due_date")
+    invoice["metadata"] = {}
+    invoice["buyer"] = dict(germany_invoice["buyer"])
+    invoice["buyer"]["address"] = dict(germany_invoice["buyer"]["address"])
+    invoice["buyer"]["address"].pop("postal_code")
+    invoice["seller"] = dict(germany_invoice["seller"])
+    invoice["seller"]["address"] = dict(germany_invoice["seller"]["address"])
+    invoice["seller"]["address"].pop("phone")
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    codes = {error["code"] for error in body["errors"]}
+    assert body["compliant"] is False
+    assert "MISSING_DUE_DATE" in codes
+    assert "MISSING_BUYER_REFERENCE" in codes
+    assert "MISSING_BUYER_ADDRESS_POSTAL_CODE" in codes
+    assert "MISSING_SELLER_PHONE" in codes
 
 
 def test_germany_invoice_rejects_unsupported_vat_rate(
@@ -138,7 +165,7 @@ def test_spain_invoice_rejects_bad_tax_id_checksum(
     assert "INVALID_BUYER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
 
 
-def test_spain_invoice_warns_when_fiscal_record_chain_metadata_is_missing(
+def test_spain_invoice_rejects_missing_sif_record_metadata(
     client: TestClient,
     auth_headers: dict[str, str],
     spain_invoice: dict,
@@ -150,11 +177,34 @@ def test_spain_invoice_warns_when_fiscal_record_chain_metadata_is_missing(
 
     assert response.status_code == 200
     body = response.json()
-    assert body["compliant"] is True
-    assert {warning["code"] for warning in body["warnings"]} == {
+    assert body["compliant"] is False
+    assert {error["code"] for error in body["errors"]} == {
+        "MISSING_INSTALLATION_NUMBER",
         "MISSING_PREVIOUS_RECORD_HASH",
+        "MISSING_RECORD_TIMESTAMP",
+        "MISSING_SIF_MODE",
+        "MISSING_SOFTWARE_NAME",
         "MISSING_SOFTWARE_SYSTEM_ID",
+        "MISSING_SOFTWARE_VERSION",
     }
+    assert {warning["code"] for warning in body["warnings"]} == {"MISSING_RESPONSIBLE_DECLARATION_REFERENCE"}
+
+
+def test_spain_invoice_rejects_invalid_previous_record_hash(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    invoice = dict(spain_invoice)
+    invoice["metadata"] = dict(spain_invoice["metadata"])
+    invoice["metadata"]["previous_record_hash"] = "not-a-sha256"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_PREVIOUS_RECORD_HASH" in {error["code"] for error in body["errors"]}
 
 
 def test_poland_invoice_validates_with_nip_checksum(

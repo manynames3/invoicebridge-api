@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="InvoiceBridge API",
     description=(
-        "MVP API for validating normalized invoice JSON, transforming it into sandbox structured invoice "
+        "MVP API for validating normalized invoice JSON, transforming it into structured invoice "
         "outputs, simulating Peppol-style, customer-managed, government-platform, or local fiscal-record "
         "routing, tracking status, exporting documents, and storing audit trails. This is not a "
         "production-certified Peppol, KSeF, RO e-Factura, VERI*FACTU, or tax-authority submission service."

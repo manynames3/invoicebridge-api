@@ -962,7 +962,7 @@ submitted
 accepted</pre>
               </div>
               <div class="mockup-footer">
-                <div class="metric"><b>55</b><span class="muted">tests passing</span></div>
+                <div class="metric"><b>57</b><span class="muted">tests passing</span></div>
                 <div class="metric"><b>5</b><span class="muted">audit event types</span></div>
                 <div class="metric"><b>0</b><span class="muted">production compliance claims</span></div>
               </div>
@@ -1286,7 +1286,7 @@ No secrets in code</pre>
                 <tbody>
                   <tr><td>Monthly invoice workflows</td><td>Demo/local</td><td class="gold">5,000</td><td>25,000</td><td>Custom</td></tr>
                   <tr><td>Belgium B2B MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
-                  <tr><td>Germany no-network MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Germany XRechnung no-network path</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Poland KSeF sandbox profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Romania RO e-Factura sandbox profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Spain local-record MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
@@ -1415,15 +1415,16 @@ No secrets in code</pre>
           mandate:
             "Domestic B2B e-invoicing started from January 1, 2025 with transitional rules and EN 16931-compatible structured formats.",
           network: "Customer-managed delivery, not central clearance",
-          format: "XRechnung/EN 16931 UBL-like sandbox XML",
+          format: "XRechnung 3.0 UBL XML",
           pain:
             "Germany creates receiving-readiness and mixed-format pressure. Sellers need to know whether an invoice is actually structured and valid, not merely a PDF attachment.",
           solution:
-            "The implemented Germany MVP validates normalized invoice JSON, produces XRechnung/EN 16931-style sandbox XML, records customer-managed delivery status, and keeps the same audit evidence model.",
+            "The implemented Germany path validates normalized invoice JSON, produces XRechnung 3.0 UBL XML, supports local KoSIT validation, records customer-managed delivery status, and keeps the same audit evidence model.",
           solves: [
             "Mandate check endpoint for Germany B2B",
             "German VAT ID checksum and VAT-rate validation",
-            "XRechnung/EN 16931-style XML transformation",
+            "XRechnung 3.0 UBL transformation",
+            "Local KoSIT validator setup without paid provider cost",
             "Customer-managed delivery mock status and audit trail",
           ],
           sourceLabel: "Official German source",
@@ -1471,23 +1472,24 @@ No secrets in code</pre>
         },
         ES: {
           status: "Implemented local-record profile",
-          title: "Spain local fiscal-record evidence",
+          title: "Spain local SIF record evidence",
           mandate:
             "Spain has invoicing-system record integrity requirements and a separate B2B e-invoice framework; this MVP models local non-VERI*FACTU-style fiscal-record evidence only.",
           network: "Local record storage, no AEAT submission",
-          format: "NON-VERI*FACTU-style fiscal record XML-like evidence",
+          format: "NON-VERI*FACTU-style local SIF record XML-like evidence",
           pain:
             "Spain mixes invoicing-system integrity requirements with electronic invoice exchange. Product teams need to avoid blending fiscal record controls, QR obligations, and B2B platform routing.",
           solution:
-            "The implemented Spain MVP validates normalized invoice JSON, generates sandbox local fiscal-record evidence with current-record hashing, and records status without claiming AEAT submission or SIF certification.",
+            "The implemented Spain MVP validates normalized invoice JSON, requires software-system identity, generates sandbox local SIF evidence with SHA-256 hash chaining and QR payload candidate data, and records status without claiming AEAT submission or SIF certification.",
           solves: [
             "Mandate check endpoint for Spain B2B local-record mode",
             "Spanish VAT/NIF/CIF checksum and VAT-rate validation",
-            "Record hash and software-system metadata warnings",
+            "Required software identity and previous-record hash-chain checks",
+            "Tax breakdown and QR payload candidate in generated XML",
             "Local fiscal-record mock status and audit trail",
           ],
           sourceLabel: "Official Spanish tax source",
-          sourceUrl: "https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu/cuestiones-generales.html",
+          sourceUrl: "https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu.html",
         },
       };
 

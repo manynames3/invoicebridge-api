@@ -1,6 +1,7 @@
 import shlex
 import subprocess
-from tempfile import NamedTemporaryFile
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from app.core.config import Settings, get_settings
 from app.db.models import Invoice
@@ -26,11 +27,11 @@ def validate_official_document(
             message=f"{validator_name} is not configured for this deployment.",
         )
 
-    with NamedTemporaryFile("w", suffix=".xml", encoding="utf-8", delete=True) as document:
-        document.write(xml)
-        document.flush()
-        args = _command_args(command, document.name)
-        completed = subprocess.run(args, capture_output=True, text=True, timeout=60, check=False)
+    with TemporaryDirectory() as temp_dir:
+        document = Path(temp_dir) / "invoice.xml"
+        document.write_text(xml, encoding="utf-8")
+        args = _command_args(command, str(document))
+        completed = subprocess.run(args, cwd=temp_dir, capture_output=True, text=True, timeout=60, check=False)
 
     return OfficialValidationResponse(
         invoice_id=invoice.id,

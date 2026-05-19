@@ -12,6 +12,7 @@ os.environ["REGION_ROLE"] = "primary"
 os.environ["DATA_RESIDENCY_REGION"] = "test-residency"
 os.environ["ACTIVE_REGIONS"] = "test-region-a,test-region-b"
 os.environ["FAILOVER_REGION"] = "test-region-b"
+os.environ["XRECHNUNG_VALIDATOR_COMMAND"] = ""
 
 from app.core.config import get_settings  # noqa: E402
 from app.db.models import Base  # noqa: E402
@@ -97,16 +98,33 @@ def germany_invoice() -> dict:
         "transaction_type": "B2B",
         "invoice_number": "INV-DE-2026-0001",
         "issue_date": "2026-02-10",
+        "due_date": "2026-03-12",
         "currency": "EUR",
         "seller": {
             "name": "Acme Deutschland GmbH",
             "vat_id": "DE123456788",
             "country_code": "DE",
+            "address": {
+                "street": "Friedrichstrasse 100",
+                "city": "Berlin",
+                "postal_code": "10117",
+                "country_code": "DE",
+                "contact_name": "Billing Team",
+                "phone": "+49301234567",
+                "email": "billing@example.de",
+            },
         },
         "buyer": {
             "name": "Globex Deutschland GmbH",
             "vat_id": "DE987654328",
             "country_code": "DE",
+            "address": {
+                "street": "Kaufingerstrasse 12",
+                "city": "Munich",
+                "postal_code": "80331",
+                "country_code": "DE",
+                "email": "ap@example.de",
+            },
         },
         "lines": [
             {
@@ -127,6 +145,11 @@ def germany_invoice() -> dict:
             "payable_amount": "357.00",
         },
         "payment_terms": "Payment due within 30 days",
+        "metadata": {
+            "buyer_reference": "DE-BUYER-REF-2026-0001",
+            "seller_iban": "DE89370400440532013000",
+            "payment_means_code": "58",
+        },
     }
 
 
@@ -250,7 +273,13 @@ def spain_invoice() -> dict:
         },
         "payment_terms": "Payment due within 30 days",
         "metadata": {
+            "sif_mode": "NO_VERIFACTU",
             "software_system_id": "IB-SANDBOX-SIF-001",
+            "software_name": "InvoiceBridge SIF Test Harness",
+            "software_version": "0.1.0",
+            "installation_number": "IB-ES-INSTALL-001",
+            "record_timestamp": "2026-03-05T10:15:00+01:00",
             "previous_record_hash": "0" * 64,
+            "responsible_declaration_reference": "IB-SIF-DECLARATION-DEMO-001",
         },
     }

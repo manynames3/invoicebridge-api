@@ -29,7 +29,8 @@ def service(db: Session = Depends(get_db)) -> InvoiceService:
     summary="Validate a normalized invoice",
     description=(
         "Validates invoice JSON against the selected MVP country profile. Belgium uses a Peppol-style "
-        "sandbox profile; Germany and Spain use no-network sandbox profiles; Poland and Romania use "
+        "sandbox profile; Germany uses a no-network XRechnung profile; Spain uses a no-network sandbox profile; "
+        "Poland and Romania use "
         "direct government-platform sandbox profiles."
     ),
 )
@@ -44,7 +45,7 @@ def validate_invoice(
     "/transform",
     response_model=TransformInvoiceResponse,
     responses={422: {"model": InvoiceValidationResponse}},
-    summary="Transform a valid invoice into a sandbox structured document",
+    summary="Transform a valid invoice into a structured document",
     description=(
         "Runs validation, stores the invoice and audit trail, and produces the configured MVP output format."
     ),
@@ -97,10 +98,10 @@ def invoice_status(
 @router.get(
     "/{invoice_id}/document",
     response_class=PlainTextResponse,
-    summary="Download the transformed sandbox XML document",
+    summary="Download the transformed XML document",
     description=(
-        "Returns the full transformed XML-like document stored for the invoice. "
-        "This is sandbox/demo output, not a production-certified authority document."
+        "Returns the full transformed XML document stored for the invoice. "
+        "Production reliance depends on the applicable official validator and provider configuration."
     ),
 )
 def transformed_document(

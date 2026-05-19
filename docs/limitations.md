@@ -4,15 +4,16 @@ This repository is a sandbox MVP, not a certified e-invoicing network service.
 
 ## Compliance
 
-- XML output is UBL-like, KSeF-like, or fiscal-record XML-like, not official schema-validated UBL, XRechnung, KSeF, RO e-Factura, Peppol, VERI*FACTU, or Spain B2B platform output.
+- Germany XML is generated as XRechnung 3.0 UBL and must pass the configured KoSIT validator before production reliance.
+- Belgium/Romania XML is UBL-like, Poland XML is KSeF-like, and Spain XML is local SIF/fiscal-record XML-like; those are not official schema-validated Peppol, RO e-Factura, KSeF, VERI*FACTU, or Spain B2B platform outputs.
 - National tax ID validation includes local checksum checks where implemented, but does not perform VAT registry lookups or prove legal registration status.
 - No real Peppol access point is integrated.
 - No tax authority or government platform submission is performed.
 - Production-readiness endpoints report missing official validators, API configuration, credentials, signing, and declaration steps rather than treating sandbox success as legal compliance.
-- Germany is modeled as customer-managed delivery, not central clearance or certified XRechnung conformance.
+- Germany is modeled as customer-managed delivery, not central clearance; certified production use still requires a passing official validator result and customer review.
 - Poland is modeled with a deterministic KSeF sandbox provider boundary, not production KSeF authentication, submission, or UPO receipt handling.
 - Romania is modeled with a deterministic ANAF sandbox provider boundary, not SPV OAuth, ANAF submission, signed response downloads, or production RO_CIUS conformance.
-- Spain is modeled as local fiscal-record evidence only, not AEAT submission, certified SIF compliance, or production VERI*FACTU.
+- Spain is modeled as local SIF record-integrity evidence with required software identity, hash-chain metadata, tax breakdowns, and QR payload candidate data; it is not AEAT submission, certified SIF compliance, or production VERI*FACTU.
 - Mandate metadata is static MVP configuration, not legal advice.
 - Country-specific legal review and conformance testing are required before production use.
 

@@ -8,7 +8,7 @@ def test_supported_countries(client: TestClient, auth_headers: dict[str, str]) -
     assert profiles["BE"]["network"] == "PEPPOL_MOCK"
     assert profiles["BE"]["implementation_status"] == "MVP_SANDBOX"
     assert profiles["DE"]["network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
-    assert profiles["DE"]["required_format"] == "XRECHNUNG_EN16931_UBL_LIKE"
+    assert profiles["DE"]["required_format"] == "XRECHNUNG_3_0_UBL"
     assert "german_vat_id_checksum" in profiles["DE"]["capabilities"]
     assert profiles["PL"]["network"] == "KSEF_GOV_SANDBOX_MOCK"
     assert profiles["PL"]["required_format"] == "KSEF_FA3_XML_LIKE"
@@ -19,6 +19,7 @@ def test_supported_countries(client: TestClient, auth_headers: dict[str, str]) -
     assert profiles["ES"]["network"] == "LOCAL_FISCAL_RECORD_MOCK"
     assert profiles["ES"]["required_format"] == "NON_VERIFACTU_FISCAL_RECORD_XML_LIKE"
     assert "spanish_tax_id_checksum" in profiles["ES"]["capabilities"]
+    assert "sha256_record_hash_chain" in profiles["ES"]["capabilities"]
 
 
 def test_mandate_check(client: TestClient, auth_headers: dict[str, str]) -> None:
@@ -44,7 +45,7 @@ def test_germany_mandate_check(client: TestClient, auth_headers: dict[str, str])
     assert response.status_code == 200
     body = response.json()
     assert body["country"] == "DE"
-    assert body["required_format"] == "XRECHNUNG_EN16931_UBL_LIKE"
+    assert body["required_format"] == "XRECHNUNG_3_0_UBL"
     assert body["delivery_network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
     assert body["pdf_allowed_as_compliant_invoice"] is False
 

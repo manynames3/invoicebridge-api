@@ -1,4 +1,4 @@
-.PHONY: install run test lint typecheck migrate docker-up docker-down docker-multiregion-up docker-multiregion-down smoke-multiregion
+.PHONY: install run test lint typecheck migrate setup-xrechnung-validator docker-up docker-down docker-multiregion-up docker-multiregion-down smoke-multiregion
 
 install:
 	python -m pip install -e ".[dev]"
@@ -17,6 +17,9 @@ typecheck:
 
 migrate:
 	alembic upgrade head
+
+setup-xrechnung-validator:
+	scripts/setup_xrechnung_validator.sh
 
 docker-up:
 	docker-compose up --build

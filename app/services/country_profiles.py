@@ -62,14 +62,14 @@ DE_B2B_EN16931_MVP = CountryProfileDefinition(
     transaction_type="B2B",
     mandated=True,
     effective_date=date(2025, 1, 1),
-    required_format="XRECHNUNG_EN16931_UBL_LIKE",
+    required_format="XRECHNUNG_3_0_UBL",
     delivery_network="CUSTOMER_MANAGED_DELIVERY_MOCK",
     pdf_allowed_as_compliant_invoice=False,
     implementation_status="MVP_SANDBOX_NO_NETWORK",
     notes=(
-        "Germany B2B structured invoice sandbox profile. This MVP validates and transforms invoice data into "
-        "EN 16931/XRechnung-style XML for customer-managed delivery; it does not submit through a government "
-        "or Peppol network."
+        "Germany B2B structured invoice profile. This implementation validates German invoice data and transforms "
+        "it into XRechnung 3.0 UBL XML for customer-managed delivery. Production reliance requires official "
+        "XRechnung/EN16931 validation."
     ),
     requires_buyer_routing_id=False,
     requires_vat_ids=True,
@@ -79,14 +79,14 @@ DE_B2B_EN16931_MVP = CountryProfileDefinition(
         "mandate_check",
         "normalized_invoice_validation",
         "german_vat_id_checksum",
-        "xrechnung_en16931_like_xml_transform",
+        "xrechnung_3_0_ubl_transform",
         "xml_export",
         "customer_managed_delivery_record",
         "status_tracking",
         "audit_trail",
     ),
     production_readiness=(
-        "Usable for no-network validation/export demos; official KoSIT/XRechnung validation required for production."
+        "No-paid-network production path when generated XML passes official KoSIT/XRechnung validation."
     ),
 )
 
@@ -169,9 +169,9 @@ ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
     pdf_allowed_as_compliant_invoice=False,
     implementation_status="MVP_SANDBOX_NO_NETWORK",
     notes=(
-        "Spain NON-VERI*FACTU-style fiscal record sandbox profile. This MVP generates local invoice record "
-        "integrity evidence and audit metadata; a PDF alone is not treated as sufficient evidence. It does not "
-        "submit records to AEAT, certify SIF compliance, or implement the Spanish B2B exchange platform."
+        "Spain NON-VERI*FACTU-style local SIF record profile. This MVP validates Spanish tax IDs, requires "
+        "software-system identity and hash-chain metadata, and generates local invoice record-integrity evidence. "
+        "It does not submit records to AEAT, certify SIF compliance, or implement the Spanish B2B exchange platform."
     ),
     requires_buyer_routing_id=False,
     requires_vat_ids=True,
@@ -181,14 +181,16 @@ ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
         "mandate_check",
         "normalized_invoice_validation",
         "spanish_tax_id_checksum",
-        "non_verifactu_fiscal_record_transform",
+        "non_verifactu_local_sif_record_transform",
         "xml_export",
-        "record_hash_evidence",
+        "sha256_record_hash_chain",
+        "qr_payload_candidate",
         "status_tracking",
         "audit_trail",
     ),
     production_readiness=(
-        "Usable for local fiscal-record evidence demos; official SIF/VERI*FACTU conformance remains required."
+        "Stronger local SIF evidence path; official SIF/VERI*FACTU validation, signing, declaration, and legal "
+        "review remain required."
     ),
 )
 

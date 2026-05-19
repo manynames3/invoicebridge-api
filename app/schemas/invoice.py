@@ -20,6 +20,7 @@ class InvoiceLine(BaseModel):
     line_id: str | None = None
     description: str | None = None
     quantity: Decimal | None = None
+    unit_code: str | None = "C62"
     unit_price: Decimal | None = None
     vat_rate: Decimal | None = None
     line_extension_amount: Decimal | None = None

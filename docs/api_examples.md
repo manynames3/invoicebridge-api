@@ -105,6 +105,8 @@ curl -s -X POST "$BASE_URL/v1/invoices/validate" \
   --data @examples/spain_valid_invoice.json
 ```
 
+Spain validation requires local SIF metadata such as `sif_mode`, `software_system_id`, `software_name`, `software_version`, `installation_number`, `record_timestamp`, and either `previous_record_hash` or `first_record=true`.
+
 Transform:
 
 ```bash
@@ -139,9 +141,9 @@ curl -s -X POST "$BASE_URL/v1/invoices/transform" \
   --data @examples/spain_valid_invoice.json
 ```
 
-Transform responses include `document_url` and `document_sha256` so clients can retrieve and verify the stored sandbox artifact.
+Transform responses include `document_url` and `document_sha256` so clients can retrieve and verify the stored artifact.
 
-Download transformed sandbox XML:
+Download transformed XML:
 
 ```bash
 curl -s -H "X-API-Key: $API_KEY" \
