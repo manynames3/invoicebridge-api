@@ -929,6 +929,7 @@
                 <span>Belgium profile implemented</span>
                 <span>Country roadmap built in</span>
                 <span>Idempotent send flow</span>
+                <span>Multi-region ready</span>
               </div>
             </div>
 
@@ -960,7 +961,7 @@ submitted
 accepted</pre>
               </div>
               <div class="mockup-footer">
-                <div class="metric"><b>21</b><span class="muted">tests passing</span></div>
+                <div class="metric"><b>27</b><span class="muted">tests passing</span></div>
                 <div class="metric"><b>5</b><span class="muted">audit event types</span></div>
                 <div class="metric"><b>0</b><span class="muted">production compliance claims</span></div>
               </div>
@@ -1141,6 +1142,16 @@ accepted</pre>
                 <h3>Audit trail evidence</h3>
                 <p>Invoices, validation results, transformed XML, submissions, and audit events are persisted with SHA-256 hashes where practical.</p>
               </article>
+              <article class="card">
+                <div class="icon-box">05</div>
+                <h3>Region-aware tenants</h3>
+                <p>Tenants can carry home, failover, and data-residency regions so invoice writes route to the right regional processing boundary.</p>
+              </article>
+              <article class="card">
+                <div class="icon-box">06</div>
+                <h3>Standby write protection</h3>
+                <p>Non-writable regions reject new invoice mutations until promoted, reducing the risk of split-brain invoice processing during failover.</p>
+              </article>
             </div>
           </div>
         </section>
@@ -1152,7 +1163,7 @@ accepted</pre>
               <h2 class="section-title">Built like infrastructure, <em>scoped like an MVP.</em></h2>
               <p class="section-copy">
                 FastAPI, Pydantic v2, SQLAlchemy, Alembic, PostgreSQL, Docker Compose, pytest, ruff, mypy, API key auth,
-                request IDs, and OpenAPI docs.
+                request IDs, OpenAPI docs, and a local two-region simulation.
               </p>
             </div>
             <div class="mockup">
@@ -1163,6 +1174,13 @@ InvoiceSubmission
 ValidationResult
 AuditEvent
 CountryProfile
+
+<strong>MULTI-REGION CONTRACT</strong>
+GET /health/ready
+GET /v1/regions
+GET /v1/tenants/{id}/region-decision
+X-Deployment-Region
+tenant_id + processing_region on records
 
 <strong>SECURITY NOTES</strong>
 X-API-Key required on /v1

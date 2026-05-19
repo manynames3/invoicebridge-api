@@ -15,6 +15,7 @@ def test_transform_valid_invoice(
     body = response.json()
     assert body["status"] == "transformed"
     assert body["format"] == "PEPPOL_BIS_BILLING_3_UBL_LIKE"
+    assert body["processing_region"] == "test-region-a"
     assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
     assert body["audit_log_id"]
 

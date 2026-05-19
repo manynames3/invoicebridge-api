@@ -11,6 +11,7 @@ class AuditEventResponse(BaseModel):
     timestamp: datetime
     actor: str
     event_type: str
+    processing_region: str
     metadata: dict[str, Any]
     payload_hash: str | None = None
 

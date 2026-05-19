@@ -13,7 +13,7 @@ This repository is a sandbox MVP, not a certified e-invoicing network service.
 ## Security
 
 - API key auth is basic and suitable only for local/demo usage.
-- Multi-tenant account boundaries are not implemented.
+- Tenant routing metadata is implemented, but tenant-scoped authentication and authorization boundaries are not.
 - Rate limiting is represented by an interface and no-op implementation.
 - Secrets are expected through environment variables and are not stored in code.
 
@@ -22,5 +22,6 @@ This repository is a sandbox MVP, not a certified e-invoicing network service.
 - Webhooks are recorded as mock audit events; no outbound delivery is attempted.
 - Data retention policies are documented conceptually but not enforced.
 - Observability is limited to structured logs and request IDs.
+- Multi-region support is an application-level design and local simulation; production still needs managed database replication, failover automation, regional secrets, and centralized observability.
 - Auto table creation is enabled for MVP convenience; production should run migrations explicitly.
 - Payload size enforcement relies on `Content-Length`; production should also enforce streamed body limits at the gateway/app server layer.

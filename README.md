@@ -36,6 +36,9 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 - Idempotency support for transform/send flows.
 - Persistent invoice, submission, validation result, and audit event models.
 - Audit trail events include SHA-256 hashes of relevant payloads where practical.
+- Region-aware tenant routing with tenant home region, data-residency region, and failover region metadata.
+- Multi-region runtime metadata with `/health/ready`, `/v1/regions`, `/v1/tenants`, regional response headers, and persisted processing regions on invoice/submission/audit records.
+- Standby-region write protection rejects new invoice mutations unless the deployment role is `local`, `primary`, or `active`.
 - API key authentication for `/v1` endpoints, request/correlation IDs, JSON structured logging, VAT ID masking in audit metadata, and payload size checks.
 - OpenAPI tags/descriptions, examples, Dockerized runtime, Alembic migrations, and CI lint/type/test workflow.
 
@@ -70,13 +73,17 @@ The first supported profile is `BE_B2B_PEPPOL_MVP`:
 - It does not submit to Belgian tax authorities.
 - It does not perform official UBL schema validation.
 - It does not provide legal advice or jurisdiction-specific compliance certification.
-- It does not implement multi-tenant accounts, billing, real webhooks, or production retention policies yet.
+- It does not implement tenant-scoped authentication, billing, real webhooks, or production retention policies yet.
 
 This MVP produces UBL-like XML for sandbox/demo purposes. Production use would require official schema validation, certified access point integration, country-specific legal review, and conformance testing.
 
 ## Architecture
 
 Architecture details are in [docs/architecture.md](docs/architecture.md), including a C4-style container diagram, runtime flow, deployment shape, and constraints.
+
+The multi-region deployment model is documented in [docs/multi_region.md](docs/multi_region.md). It intentionally uses a single-cloud, multi-region design before multi-cloud: tenant home-region routing, regional-primary writes, standby failover, idempotent retries, and audit evidence with processing-region metadata.
+
+AWS and GCP deployment patterns are summarized in [docs/cloud_deployment_patterns.md](docs/cloud_deployment_patterns.md).
 
 Architecture decision records are in [docs/adrs](docs/adrs).
 
@@ -100,8 +107,10 @@ app/
 docs/
   adrs/              architecture decision records
 examples/            sample Belgium invoice payloads and curl commands
+scripts/             smoke checks for local multi-region runtime
 site/                static sales landing page deployed to Cloudflare Pages
 tests/               pytest coverage for validation, transform, send, audit
+docker-compose.multi-region.yml  local two-region simulation with separate Postgres databases
 ```
 
 ## Local Setup
@@ -177,6 +186,22 @@ curl -s -H "X-API-Key: local-dev-key" \
   http://localhost:8000/v1/invoices/{invoice_id}/audit-trail
 ```
 
+Region topology:
+
+```bash
+curl -s -H "X-API-Key: local-dev-key" \
+  http://localhost:8000/v1/regions
+```
+
+Register a tenant routing policy:
+
+```bash
+curl -s -X POST http://localhost:8000/v1/tenants \
+  -H "X-API-Key: local-dev-key" \
+  -H "Content-Type: application/json" \
+  -d '{"tenant_id":"acme-eu","name":"Acme EU","home_region":"local-dev","data_residency_region":"EU","failover_region":"local-standby"}'
+```
+
 More examples are in [docs/api_examples.md](docs/api_examples.md).
 
 ## Sample Validation Response
@@ -217,6 +242,24 @@ The API deployment model included in this repository is Docker Compose:
 
 For production, the API should run migrations explicitly with Alembic, disable automatic table creation, terminate TLS at the platform edge or gateway, and source secrets from the deployment environment.
 
+For a local multi-region simulation:
+
+```bash
+make docker-multiregion-up
+curl -s http://localhost:8001/health/ready
+curl -s http://localhost:8002/health/ready
+make smoke-multiregion
+make docker-multiregion-down
+```
+
+The production recommendation is regional-primary writes with a standby region, not active-active database writes. See [docs/multi_region.md](docs/multi_region.md).
+
+## Multi-Region / Cloud Deployment Skills
+
+- AWS pattern: ECS Fargate or App Runner, ECR, RDS PostgreSQL, Route 53/Global Accelerator failover, Secrets Manager, CloudWatch.
+- GCP pattern: Cloud Run, Artifact Registry, Cloud SQL PostgreSQL, External HTTP(S) Load Balancer or DNS failover, Secret Manager, Cloud Logging/Monitoring.
+- Shared platform practices: Docker image portability, environment-driven config, explicit Alembic migrations, health/readiness checks, smoke tests, tenant home-region routing, idempotency-safe retries, and regional audit evidence.
+
 The public sales landing page is a static site in `site/` and is deployed separately on Cloudflare Pages at [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev).
 
 ## Data Retention And Audit Trail
@@ -235,7 +278,7 @@ See [docs/limitations.md](docs/limitations.md) for compliance, security, and ope
 2. Official UBL schema validation
 3. Poland KSeF profile
 4. Webhook delivery
-5. Multi-tenant accounts
+5. Tenant-scoped auth and account management
 6. Usage-based billing/metering
 7. Dashboard
 8. Terraform/AWS deployment

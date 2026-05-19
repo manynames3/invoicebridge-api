@@ -21,6 +21,7 @@ def test_audit_trail_contains_transformation_and_submission_events(
         "accepted",
     ]
     assert all(event["payload_hash"] for event in body["events"])
+    assert {event["processing_region"] for event in body["events"]} == {"test-region-a"}
 
 
 def test_status_after_send(
@@ -37,4 +38,5 @@ def test_status_after_send(
     assert body["current_status"] == "accepted"
     assert body["validation_status"] == "passed"
     assert body["delivery_status"] == "accepted"
+    assert body["processing_region"] == "test-region-a"
     assert body["retry_available"] is False

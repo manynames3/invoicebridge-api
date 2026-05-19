@@ -19,6 +19,7 @@ def test_send_existing_invoice_accepts_by_default(
     assert body["invoice_id"] == invoice_id
     assert body["network"] == "PEPPOL_MOCK"
     assert body["delivery_status"] == "accepted"
+    assert body["processing_region"] == "test-region-a"
     assert body["provider_reference"].startswith("MOCK-PEPPOL-")
 
 

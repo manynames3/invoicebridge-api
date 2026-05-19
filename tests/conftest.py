@@ -7,6 +7,11 @@ from fastapi.testclient import TestClient
 os.environ["API_KEY"] = "test-key"
 os.environ["DATABASE_URL"] = "sqlite:///./test_invoicebridge.db"
 os.environ["AUTO_CREATE_TABLES"] = "true"
+os.environ["DEPLOYMENT_REGION"] = "test-region-a"
+os.environ["REGION_ROLE"] = "primary"
+os.environ["DATA_RESIDENCY_REGION"] = "test-residency"
+os.environ["ACTIVE_REGIONS"] = "test-region-a,test-region-b"
+os.environ["FAILOVER_REGION"] = "test-region-b"
 
 from app.db.models import Base  # noqa: E402
 from app.db.session import engine  # noqa: E402

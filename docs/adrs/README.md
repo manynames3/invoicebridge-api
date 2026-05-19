@@ -7,3 +7,4 @@ These ADRs capture the main architecture choices for the InvoiceBridge API MVP.
 - [ADR 0003: Use A Mock Peppol Provider For The MVP](0003-mock-peppol-provider.md)
 - [ADR 0004: Persist Audit Events With Payload Hashes](0004-audit-events-payload-hashes.md)
 - [ADR 0005: Use Docker Compose And PostgreSQL For Local Runtime](0005-docker-compose-postgres-runtime.md)
+- [ADR 0006: Use Single-Cloud Multi-Region Before Multi-Cloud](0006-single-cloud-multi-region-first.md)

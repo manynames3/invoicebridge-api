@@ -50,6 +50,7 @@ class InvoiceTotals(BaseModel):
 
 
 class NormalizedInvoiceInput(BaseModel):
+    tenant_id: str | None = None
     country: str | None = "BE"
     transaction_type: str | None = "B2B"
     invoice_number: str | None = None
@@ -69,8 +70,10 @@ class NormalizedInvoiceInput(BaseModel):
 
 class TransformInvoiceResponse(BaseModel):
     invoice_id: str
+    tenant_id: str | None = None
     status: str
     format: str
+    processing_region: str
     xml_preview: str
     warnings: list[ValidationIssue]
     audit_log_id: str
@@ -86,20 +89,24 @@ class SendInvoiceRequest(BaseModel):
 
 class SendInvoiceResponse(BaseModel):
     invoice_id: str
+    tenant_id: str | None = None
     submission_id: str
     network: str
     delivery_status: str
     provider_reference: str
+    processing_region: str
     rejection_reason: str | None = None
     audit_log_id: str
 
 
 class InvoiceStatusResponse(BaseModel):
     invoice_id: str
+    tenant_id: str | None = None
     current_status: str
     validation_status: str
     delivery_status: str
     provider_reference: str | None = None
+    processing_region: str
     created_at: datetime
     updated_at: datetime
     last_error: str | None = None
@@ -114,6 +121,7 @@ class CreateInvoiceItem(BaseModel):
 
 
 class CreateInvoiceRequest(BaseModel):
+    tenant_id: str | None = None
     seller_id: str
     buyer_id: str
     items: list[CreateInvoiceItem]

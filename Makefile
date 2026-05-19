@@ -1,4 +1,4 @@
-.PHONY: install run test lint typecheck migrate docker-up docker-down
+.PHONY: install run test lint typecheck migrate docker-up docker-down docker-multiregion-up docker-multiregion-down smoke-multiregion
 
 install:
 	python -m pip install -e ".[dev]"
@@ -23,3 +23,12 @@ docker-up:
 
 docker-down:
 	docker-compose down -v
+
+docker-multiregion-up:
+	docker-compose -f docker-compose.multi-region.yml up --build
+
+docker-multiregion-down:
+	docker-compose -f docker-compose.multi-region.yml down -v
+
+smoke-multiregion:
+	scripts/smoke_multi_region.sh

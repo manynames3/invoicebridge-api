@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.regions import current_region
 from app.db.models import AuditEvent
 from app.services.checksum import stable_payload_hash
 
@@ -19,6 +20,7 @@ def create_audit_event(
         invoice_id=invoice_id,
         event_type=event_type,
         actor=actor,
+        processing_region=current_region(),
         event_metadata=metadata or {},
         payload_hash=stable_payload_hash(payload_for_hash) if payload_for_hash is not None else None,
     )

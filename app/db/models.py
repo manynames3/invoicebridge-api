@@ -25,10 +25,25 @@ class TimestampMixin:
     )
 
 
+class Tenant(Base, TimestampMixin):
+    __tablename__ = "tenants"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    home_region: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    data_residency_region: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    failover_region: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    tenant_metadata: Mapped[dict] = mapped_column(SQLJSON, nullable=False, default=dict)
+
+    invoices: Mapped[list["Invoice"]] = relationship(back_populates="tenant")
+
+
 class Invoice(Base, TimestampMixin):
     __tablename__ = "invoices"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_string)
+    tenant_id: Mapped[str | None] = mapped_column(ForeignKey("tenants.id"), nullable=True, index=True)
     country: Mapped[str] = mapped_column(String(2), nullable=False, index=True)
     transaction_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     invoice_number: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -40,6 +55,7 @@ class Invoice(Base, TimestampMixin):
     delivery_status: Mapped[str] = mapped_column(String(40), nullable=False, default="not_submitted")
     provider_reference: Mapped[str | None] = mapped_column(String(120), nullable=True)
     required_format: Mapped[str] = mapped_column(String(120), nullable=False)
+    processing_region: Mapped[str] = mapped_column(String(60), nullable=False, default="local-dev", index=True)
     idempotency_key: Mapped[str | None] = mapped_column(String(180), nullable=True, unique=True)
     original_payload: Mapped[dict] = mapped_column(SQLJSON, nullable=False)
     transformed_xml: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -55,6 +71,7 @@ class Invoice(Base, TimestampMixin):
     validation_results: Mapped[list["ValidationResult"]] = relationship(
         back_populates="invoice", cascade="all, delete-orphan"
     )
+    tenant: Mapped[Tenant | None] = relationship(back_populates="invoices")
 
 
 class InvoiceSubmission(Base, TimestampMixin):
@@ -66,6 +83,7 @@ class InvoiceSubmission(Base, TimestampMixin):
     delivery_status: Mapped[str] = mapped_column(String(40), nullable=False)
     provider_reference: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processing_region: Mapped[str] = mapped_column(String(60), nullable=False, default="local-dev", index=True)
     idempotency_key: Mapped[str | None] = mapped_column(String(180), nullable=True)
     request_payload: Mapped[dict | None] = mapped_column(SQLJSON, nullable=True)
     response_payload: Mapped[dict] = mapped_column(SQLJSON, nullable=False)
@@ -85,6 +103,7 @@ class AuditEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     actor: Mapped[str] = mapped_column(String(80), nullable=False, default="system")
     event_type: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    processing_region: Mapped[str] = mapped_column(String(60), nullable=False, default="local-dev", index=True)
     event_metadata: Mapped[dict] = mapped_column(SQLJSON, nullable=False, default=dict)
     payload_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
 

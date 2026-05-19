@@ -9,6 +9,10 @@ services:
       DATABASE_URL: postgresql+psycopg://invoicebridge:invoicebridge@db:5432/invoicebridge
       AUTO_CREATE_TABLES: "true"
       LOG_LEVEL: INFO
+      DEPLOYMENT_REGION: local-dev
+      REGION_ROLE: local
+      DATA_RESIDENCY_REGION: local
+      ACTIVE_REGIONS: local-dev
     depends_on:
       db:
         condition: service_healthy
