@@ -10,7 +10,7 @@ Spain SIF / VERI*FACTU readiness is not just a tax-ID validation or XML formatti
 
 ## Decision
 
-Implement a Spain SIF path with explicit guardrails while reporting the country as not ready for legal production use:
+Implement a Spain SIF path with explicit guardrails while reporting legal production support as coming soon:
 
 - Generate AEAT-shaped `RegFactuSistemaFacturacion` XML with `RegistroAlta` fields for issuer NIF, invoice series/number, issue date, invoice type, total tax, total amount, previous hash, and timestamp.
 - Generate SHA-256 record and event hashes over explicit field subsets.

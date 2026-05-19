@@ -2,7 +2,7 @@
 
 InvoiceBridge API is a production-style FastAPI backend that accepts normalized invoice JSON, selects a country mandate profile, validates totals and tax rules, transforms valid invoices into structured outputs, simulates routing or local evidence recording, tracks status, and stores an audit trail. It is designed as a B2B infrastructure API for ERP, accounting SaaS, billing platforms, marketplaces, and cross-border sellers that need e-invoicing compliance workflows without replacing their existing invoice system.
 
-This is a portfolio MVP, not a certified e-invoicing gateway. Germany is usable only when generated invoices pass official XRechnung validation. Belgium, Poland, Romania, and Spain are not ready for legal production use yet because required access-point, tax-authority, signing, declaration, or conformance work is still missing.
+This is a portfolio MVP, not a certified e-invoicing gateway. Germany is usable only when generated invoices pass official XRechnung validation. Legal production support for Belgium, Poland, Romania, and Spain is coming soon after required access-point, tax-authority, signing, declaration, or conformance work is completed.
 
 Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev)
 
@@ -50,11 +50,11 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 
 Supported MVP profiles:
 
-- `BE_B2B_PEPPOL_MVP`: not ready for legal production use. Peppol access point integration and conformance testing are roadmap work.
+- `BE_B2B_PEPPOL_MVP`: legal production support coming soon. Peppol access point integration and conformance testing are roadmap work.
 - `DE_B2B_EN16931_MVP`: usable only when official validation passes. Generates XRechnung 3.0 UBL and supports KoSIT validation, but each customer deployment still needs invoice-by-invoice validation and review.
-- `PL_B2B_KSEF_MVP`: not ready for legal production use. Real KSeF API credentials, encryption, submission, and UPO handling are roadmap work.
-- `RO_B2B_EFACTURA_MVP`: not ready for legal production use. Real ANAF/SPV OAuth, upload/status polling, and signed response handling are roadmap work.
-- `ES_B2B_NON_VERIFACTU_MVP`: not ready for legal production use. Emits AEAT-shaped SIF XML and local evidence, but signing, AEAT test evidence, VERI*FACTU submission capability, and responsible declaration completion remain external blockers.
+- `PL_B2B_KSEF_MVP`: legal production support coming soon. Real KSeF API credentials, encryption, submission, and UPO handling are roadmap work.
+- `RO_B2B_EFACTURA_MVP`: legal production support coming soon. Real ANAF/SPV OAuth, upload/status polling, and signed response handling are roadmap work.
+- `ES_B2B_NON_VERIFACTU_MVP`: legal production support coming soon. Emits AEAT-shaped SIF XML and local evidence, but signing, AEAT test evidence, VERI*FACTU submission capability, and responsible declaration completion remain external blockers.
 
 Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `EUR`; Romania supports `RON` and `EUR`. All profiles require document totals that match calculated line and tax totals.
 
@@ -62,11 +62,11 @@ Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `
 
 | Country | Current status | What is still required |
 |---|---|---|
-| Belgium | Not ready | Real Peppol access point, official conformance testing, and provider evidence. |
+| Belgium | Coming soon | Real Peppol access point, official conformance testing, and provider evidence. |
 | Germany | Usable with official validation | XRechnung output must pass official validation for each customer payload; delivery remains customer-managed. |
-| Poland | Not ready | Real KSeF API authentication, encryption, production submission, and UPO receipt handling. |
-| Romania | Not ready | Real ANAF/SPV OAuth, upload/status polling, and official signed response handling. |
-| Spain | Not ready | Signing, immutable event logging, AEAT external test evidence, VERI*FACTU submission capability, responsible declaration, and legal review. |
+| Poland | Coming soon | Real KSeF API authentication, encryption, production submission, and UPO receipt handling. |
+| Romania | Coming soon | Real ANAF/SPV OAuth, upload/status polling, and official signed response handling. |
+| Spain | Coming soon | Signing, immutable event logging, AEAT external test evidence, VERI*FACTU submission capability, responsible declaration, and legal review. |
 
 ## What It Does
 

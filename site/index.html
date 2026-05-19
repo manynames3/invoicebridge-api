@@ -920,8 +920,8 @@
               <p class="lead">
                 Turn existing invoice JSON into country-specific e-invoice workflows: mandate checks, validation,
                 structured transformation, routing or local evidence, status tracking, and audit trails.
-                Germany can be used only after official XRechnung validation passes. Belgium, Poland, Romania,
-                and Spain are clearly marked as not ready for legal production use yet.
+                Germany can be used only after official XRechnung validation passes. Legal production support for
+                Belgium, Poland, Romania, and Spain is coming soon.
               </p>
               <div class="hero-actions">
                 <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#api-examples">View API docs</a>
@@ -929,7 +929,7 @@
               </div>
               <div class="trust-row">
                 <span>DE validation-gated</span>
-                <span>BE, PL, RO, ES not ready</span>
+                <span>BE, PL, RO, ES coming soon</span>
                 <span>Idempotent send flow</span>
                 <span>Multi-region ready</span>
               </div>
@@ -983,7 +983,7 @@ accepted</pre>
                 <div class="step-num">01</div>
                 <div class="icon-box">BE</div>
                 <h3>Check the mandate</h3>
-                <p>Look up country and transaction metadata before transformation. Germany is validation-gated; Belgium, Poland, Romania, and Spain are not ready for legal production use.</p>
+                <p>Look up country and transaction metadata before transformation. Germany is validation-gated; legal production support for Belgium, Poland, Romania, and Spain is coming soon.</p>
               </article>
               <article class="card">
                 <div class="step-num">02</div>
@@ -1018,12 +1018,12 @@ accepted</pre>
                 <button class="country-button active" type="button" role="tab" aria-selected="true" data-country="BE">
                   <span>BE</span>
                   <strong>Belgium</strong>
-                  <small>Not ready</small>
+                  <small>Coming soon</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="PL">
                   <span>PL</span>
                   <strong>Poland</strong>
-                  <small>Not ready</small>
+                  <small>Coming soon</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="FR">
                   <span>FR</span>
@@ -1043,19 +1043,19 @@ accepted</pre>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="RO">
                   <span>RO</span>
                   <strong>Romania</strong>
-                  <small>Not ready</small>
+                  <small>Coming soon</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="ES">
                   <span>ES</span>
                   <strong>Spain</strong>
-                  <small>Not ready</small>
+                  <small>Coming soon</small>
                 </button>
               </div>
 
               <article class="country-panel" aria-live="polite">
                 <div class="country-panel-top">
                   <div>
-                    <div class="plan-name" id="country-status">Not ready for legal production use</div>
+                    <div class="plan-name" id="country-status">Legal production support coming soon</div>
                     <h3 id="country-title">Belgium B2B Peppol</h3>
                   </div>
                   <a
@@ -1111,8 +1111,8 @@ accepted</pre>
 
             <p class="country-footnote">
               Snapshot as of May 19, 2026. Country rules need legal review before production. Germany is usable
-              only when official XRechnung validation passes. Belgium, Poland, Romania, and Spain are not ready
-              for legal production use in this repository. The other country cards show planned work.
+              only when official XRechnung validation passes. Legal production support for Belgium, Poland,
+              Romania, and Spain is coming soon. The other country cards show planned work.
             </p>
           </div>
         </section>
@@ -1132,7 +1132,7 @@ accepted</pre>
               <article class="card">
                 <div class="icon-box">02</div>
                 <h3>Structured transformation</h3>
-                <p>XML is generated with structured APIs and clearly marked with whether it is usable or not ready for legal production use.</p>
+                <p>XML is generated with structured APIs and clearly marked with whether it is usable now or coming soon for legal production use.</p>
               </article>
               <article class="card">
                 <div class="icon-box">03</div>
@@ -1286,11 +1286,11 @@ No secrets in code</pre>
                 </thead>
                 <tbody>
                   <tr><td>Monthly invoice workflows</td><td>Demo/local</td><td class="gold">5,000</td><td>25,000</td><td>Custom</td></tr>
-                  <tr><td>Belgium B2B profile</td><td>Not ready</td><td class="gold">Not ready</td><td>Official integration planned</td><td>Custom official</td></tr>
+                  <tr><td>Belgium B2B profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>Official integration planned</td><td>Custom official</td></tr>
                   <tr><td>Germany XRechnung no-network path</td><td>Validation-gated</td><td class="gold">Validation-gated</td><td>Validator-gated</td><td>Custom review</td></tr>
-                  <tr><td>Poland KSeF profile</td><td>Not ready</td><td class="gold">Not ready</td><td>Official integration planned</td><td>Custom official</td></tr>
-                  <tr><td>Romania RO e-Factura profile</td><td>Not ready</td><td class="gold">Not ready</td><td>Official integration planned</td><td>Custom official</td></tr>
-                  <tr><td>Spain SIF profile</td><td>Not ready</td><td class="gold">Not ready</td><td>External blockers</td><td>Custom review</td></tr>
+                  <tr><td>Poland KSeF profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>Official integration planned</td><td>Custom official</td></tr>
+                  <tr><td>Romania RO e-Factura profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>Official integration planned</td><td>Custom official</td></tr>
+                  <tr><td>Spain SIF profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>External blockers</td><td>Custom review</td></tr>
                   <tr><td>Structured transforms</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Mock provider outcomes</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Audit trail</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
@@ -1312,7 +1312,7 @@ No secrets in code</pre>
             <div class="faq-grid">
               <article class="card">
                 <h3>Is this production-certified?</h3>
-                <p>No. Germany is usable only after official validation passes. The other implemented countries are not ready for legal production use, and none are certified Peppol, KSeF, RO e-Factura, AEAT, or VERI*FACTU integrations.</p>
+                <p>No. Germany is usable only after official validation passes. Legal production support for the other implemented countries is coming soon, and none are certified Peppol, KSeF, RO e-Factura, AEAT, or VERI*FACTU integrations.</p>
               </article>
               <article class="card">
                 <h3>Who is this for?</h3>
@@ -1345,14 +1345,14 @@ No secrets in code</pre>
       <footer class="footer">
         <div class="container footer-inner">
           <span>InvoiceBridge API</span>
-          <span>MVP. Germany is validation-gated; other implemented countries are not ready for legal production use.</span>
+          <span>MVP. Germany is validation-gated; legal production support for other implemented countries is coming soon.</span>
         </div>
       </footer>
     </div>
     <script>
       const countryProfiles = {
         BE: {
-          status: "Not ready for legal production use",
+          status: "Legal production support coming soon",
           title: "Belgium B2B Peppol",
           mandate: "Mandatory from January 1, 2026 for nearly all Belgian VAT-liable B2B transactions.",
           network: "Peppol-style network routing",
@@ -1371,7 +1371,7 @@ No secrets in code</pre>
           sourceUrl: "https://einvoice.belgium.be/en/article/when-e-invoicing-mandatory",
         },
         PL: {
-          status: "Not ready for legal production use",
+          status: "Legal production support coming soon",
           title: "Poland KSeF",
           mandate:
             "KSeF obligation is phased: February 1, 2026 for large taxpayers, April 1, 2026 for other taxpayers, and January 1, 2027 for the lowest monthly sales threshold.",
@@ -1452,7 +1452,7 @@ No secrets in code</pre>
           sourceUrl: "https://www1.agenziaentrate.gov.it/web_app_entrate/fatturazione_elettronica.html",
         },
         RO: {
-          status: "Not ready for legal production use",
+          status: "Legal production support coming soon",
           title: "Romania RO e-Factura",
           mandate:
             "RO e-Factura is mandatory for many domestic B2B/B2G flows, with B2C expansion from January 1, 2025 and ongoing scope clarifications.",
@@ -1472,7 +1472,7 @@ No secrets in code</pre>
           sourceUrl: "https://static.anaf.ro/static/10/Anaf/Informatii_R/Clarificare%20RO_e_Factura.pdf",
         },
         ES: {
-          status: "Not ready for legal production use",
+          status: "Legal production support coming soon",
           title: "Spain SIF record evidence",
           mandate:
             "Spain has invoicing-system record integrity requirements and a separate B2B e-invoice framework; this MVP models local non-VERI*FACTU-style fiscal-record evidence only.",
@@ -1481,7 +1481,7 @@ No secrets in code</pre>
           pain:
             "Spain mixes invoicing-system integrity requirements with electronic invoice exchange. Product teams need to avoid blending fiscal record controls, QR obligations, and B2B platform routing.",
           solution:
-            "The implemented Spain profile validates normalized invoice JSON, requires producer/software identity and VERI*FACTU capability metadata, generates AEAT-shaped SIF XML with RegistroAlta fields, SHA-256 record/event chaining, and AEAT QR payload draft data, and records status. It is not ready for legal production use until signing, AEAT test evidence, VERI*FACTU capability, declaration, and legal review are complete.",
+            "The implemented Spain profile validates normalized invoice JSON, requires producer/software identity and VERI*FACTU capability metadata, generates AEAT-shaped SIF XML with RegistroAlta fields, SHA-256 record/event chaining, and AEAT QR payload draft data, and records status. Legal production support is coming soon after signing, AEAT test evidence, VERI*FACTU capability, declaration, and legal review are complete.",
           solves: [
             "Mandate check endpoint for Spain B2B local-record mode",
             "Spanish VAT/NIF/CIF checksum and VAT-rate validation",

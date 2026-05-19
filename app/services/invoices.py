@@ -473,7 +473,7 @@ class InvoiceService:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail={
-                    "code": "INVOICE_NOT_READY_FOR_SUBMISSION",
+                    "code": "INVOICE_NOT_SUBMITTABLE",
                     "message": "Only successfully transformed invoices can be submitted.",
                 },
             )

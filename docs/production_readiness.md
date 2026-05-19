@@ -17,7 +17,7 @@ InvoiceBridge can support no-paid-provider paths, but that is not the same as no
 | Germany | Customer-managed structured e-invoice exchange | Usable only when official XRechnung/EN16931 validation passes, such as a KoSIT validator command |
 | Poland | Direct KSeF government API | Roadmap only: FA(3) schema validation, KSeF API URL, encryption/authentication, customer KSeF credentials/certificates, UPO handling |
 | Romania | Direct ANAF/SPV API | Roadmap only: RO_CIUS validation, ANAF API URL, SPV/OAuth credentials, upload/status polling, signed response handling |
-| Spain | Local SIF/non-VERI*FACTU-style record controls with software identity, `RegistroAlta` fields, and SHA-256 record/event hash chaining | Not ready: official SIF validation, record signing, immutable event log, AEAT external test evidence, VERI*FACTU submission capability, responsible declaration readiness |
+| Spain | Local SIF/non-VERI*FACTU-style record controls with software identity, `RegistroAlta` fields, and SHA-256 record/event hash chaining | Coming soon: official SIF validation, record signing, immutable event log, AEAT external test evidence, VERI*FACTU submission capability, responsible declaration readiness |
 
 ## Configuration
 
@@ -58,7 +58,7 @@ export SPANISH_SIF_VALIDATOR_COMMAND="vendor/spanish-sif/validate-spanish-sif.sh
 
 The bundled Germany example invoice was checked locally against KoSIT Validator `1.6.0` with XRechnung validator configuration `3.0.2` and was accepted. Customer payloads must still be validated invoice by invoice.
 
-Spain now includes SIF guardrails: required producer/software metadata, VERI*FACTU capability metadata, event-log metadata, AEAT `RegFactuSistemaFacturacion` / `RegistroAlta` output, SHA-256 record and event hashes, QR payload draft fields, a signing command interface, and responsible declaration draft output. The API reports Spain as not ready for legal production use until official SIF validation, signing, event logging, AEAT external test-portal evidence, VERI*FACTU submission capability, and responsible declaration readiness are configured. See [spain_sif_readiness.md](spain_sif_readiness.md).
+Spain now includes SIF guardrails: required producer/software metadata, VERI*FACTU capability metadata, event-log metadata, AEAT `RegFactuSistemaFacturacion` / `RegistroAlta` output, SHA-256 record and event hashes, QR payload draft fields, a signing command interface, and responsible declaration draft output. The API reports Spain as coming soon for legal production use until official SIF validation, signing, event logging, AEAT external test-portal evidence, VERI*FACTU submission capability, and responsible declaration readiness are configured. See [spain_sif_readiness.md](spain_sif_readiness.md).
 
 ## Production Boundary
 

@@ -1,6 +1,6 @@
 # Spain SIF / VERI*FACTU Readiness
 
-Spain is not ready for legal production use in this repository. AEAT does not pre-certify the software through this repository; production use still requires official technical validation, signing, test-portal evidence, customer-specific deployment controls, and a responsible declaration.
+Legal production support for Spain is coming soon in this repository. AEAT does not pre-certify the software through this repository; production use still requires official technical validation, signing, test-portal evidence, customer-specific deployment controls, and a responsible declaration.
 
 ## What Is Implemented
 

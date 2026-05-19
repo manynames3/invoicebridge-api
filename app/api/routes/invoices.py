@@ -28,8 +28,8 @@ def service(db: Session = Depends(get_db)) -> InvoiceService:
     response_model=InvoiceValidationResponse,
     summary="Validate a normalized invoice",
     description=(
-        "Validates invoice JSON against the selected MVP country profile. Belgium, Poland, Romania, and Spain are "
-        "not ready for legal production use; Germany is usable only when official XRechnung validation passes."
+        "Validates invoice JSON against the selected MVP country profile. Legal production support for Belgium, "
+        "Poland, Romania, and Spain is coming soon; Germany is usable only when official XRechnung validation passes."
     ),
 )
 def validate_invoice(

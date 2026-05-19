@@ -2,7 +2,7 @@
 
 InvoiceBridge API is a modular FastAPI service for the e-invoicing compliance workflow: accept normalized invoice JSON, select a country mandate profile, validate compliance rules, transform valid invoices into structured outputs, submit or record through a mock provider, track status, and persist an audit trail.
 
-The MVP supports five country profiles: Belgium B2B Peppol-style, Germany XRechnung 3.0 UBL customer-managed delivery, Poland KSeF FA(3)-style, Romania RO e-Factura/RO_CIUS-style, and Spain NON-VERI*FACTU-style local SIF record evidence. Germany is usable only when official validation passes; the other implemented countries are not ready for legal production use. The design keeps mandate rules, validators, transformers, and providers separate so additional countries or real network providers can be added without rewriting the HTTP API.
+The MVP supports five country profiles: Belgium B2B Peppol-style, Germany XRechnung 3.0 UBL customer-managed delivery, Poland KSeF FA(3)-style, Romania RO e-Factura/RO_CIUS-style, and Spain NON-VERI*FACTU-style local SIF record evidence. Germany is usable only when official validation passes; legal production support for the other implemented countries is coming soon. The design keeps mandate rules, validators, transformers, and providers separate so additional countries or real network providers can be added without rewriting the HTTP API.
 
 ## C4-Style Container Diagram
 

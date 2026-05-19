@@ -19,4 +19,4 @@ Add Germany and Spain as no-network MVP profiles with explicit mock provider net
 
 - The API can demonstrate multi-country compliance workflow value without pretending to submit to official systems.
 - Each profile still uses the same validate, transform, send, status, and audit contracts.
-- Documentation must label each profile by its real status: usable with official validation for Germany, and not ready for legal production use for unfinished country integrations.
+- Documentation must label each profile by its real status: usable with official validation for Germany, and coming soon for unfinished country integrations.

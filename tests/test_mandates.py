@@ -6,17 +6,17 @@ def test_supported_countries(client: TestClient, auth_headers: dict[str, str]) -
     assert response.status_code == 200
     profiles = {profile["country"]: profile for profile in response.json()}
     assert profiles["BE"]["network"] == "PEPPOL_MOCK"
-    assert profiles["BE"]["implementation_status"] == "NOT_READY_PRODUCTION_ROADMAP"
+    assert profiles["BE"]["implementation_status"] == "COMING_SOON_PRODUCTION_ROADMAP"
     assert profiles["DE"]["network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
     assert profiles["DE"]["required_format"] == "XRECHNUNG_3_0_UBL"
     assert "german_vat_id_checksum" in profiles["DE"]["capabilities"]
     assert profiles["PL"]["network"] == "KSEF_GOV_MOCK"
     assert profiles["PL"]["required_format"] == "KSEF_FA3_XML_LIKE"
-    assert profiles["PL"]["implementation_status"] == "NOT_READY_PRODUCTION_ROADMAP"
+    assert profiles["PL"]["implementation_status"] == "COMING_SOON_PRODUCTION_ROADMAP"
     assert "polish_nip_checksum" in profiles["PL"]["capabilities"]
     assert profiles["RO"]["network"] == "RO_EFACTURA_GOV_MOCK"
     assert profiles["RO"]["required_format"] == "RO_CIUS_UBL_2_1_XML_LIKE"
-    assert profiles["RO"]["implementation_status"] == "NOT_READY_PRODUCTION_ROADMAP"
+    assert profiles["RO"]["implementation_status"] == "COMING_SOON_PRODUCTION_ROADMAP"
     assert "romanian_cui_checksum" in profiles["RO"]["capabilities"]
     assert profiles["ES"]["network"] == "LOCAL_FISCAL_RECORD_MOCK"
     assert profiles["ES"]["required_format"] == "NON_VERIFACTU_FISCAL_RECORD_XML_LIKE"
@@ -66,7 +66,7 @@ def test_spain_mandate_check(client: TestClient, auth_headers: dict[str, str]) -
     assert body["country"] == "ES"
     assert body["required_format"] == "NON_VERIFACTU_FISCAL_RECORD_XML_LIKE"
     assert body["delivery_network"] == "LOCAL_FISCAL_RECORD_MOCK"
-    assert body["implementation_status"] == "NOT_READY_EXTERNAL_VALIDATION_REQUIRED"
+    assert body["implementation_status"] == "COMING_SOON_EXTERNAL_VALIDATION_REQUIRED"
     assert body["pdf_allowed_as_compliant_invoice"] is False
 
 
@@ -81,7 +81,7 @@ def test_poland_mandate_check(client: TestClient, auth_headers: dict[str, str]) 
     assert body["country"] == "PL"
     assert body["required_format"] == "KSEF_FA3_XML_LIKE"
     assert body["delivery_network"] == "KSEF_GOV_MOCK"
-    assert body["implementation_status"] == "NOT_READY_PRODUCTION_ROADMAP"
+    assert body["implementation_status"] == "COMING_SOON_PRODUCTION_ROADMAP"
     assert "KSeF credentials" in body["production_readiness"]
 
 
@@ -96,5 +96,5 @@ def test_romania_mandate_check(client: TestClient, auth_headers: dict[str, str])
     assert body["country"] == "RO"
     assert body["required_format"] == "RO_CIUS_UBL_2_1_XML_LIKE"
     assert body["delivery_network"] == "RO_EFACTURA_GOV_MOCK"
-    assert body["implementation_status"] == "NOT_READY_PRODUCTION_ROADMAP"
+    assert body["implementation_status"] == "COMING_SOON_PRODUCTION_ROADMAP"
     assert "ANAF/SPV OAuth" in body["production_readiness"]

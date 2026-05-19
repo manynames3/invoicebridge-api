@@ -12,7 +12,7 @@ router = APIRouter(prefix="/compliance", tags=["compliance"])
     summary="Check no-paid-network production readiness for a country profile",
     description=(
         "Returns the explicit production blockers for a country profile. This endpoint prevents evaluation-only "
-        "profiles from being misrepresented as legally production-ready."
+        "profiles from being misrepresented as certified for legal production use."
     ),
 )
 def production_readiness(
