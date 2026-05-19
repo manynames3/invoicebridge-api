@@ -21,6 +21,7 @@ def test_send_existing_invoice_accepts_by_default(
     assert body["delivery_status"] == "accepted"
     assert body["processing_region"] == "test-region-a"
     assert body["provider_reference"].startswith("MOCK-PEPPOL-")
+    assert body["provider_metadata"]["legal_compliance"] == "sandbox_demo_only"
 
 
 def test_send_replays_prior_accepted_submission_without_duplicate_provider_action(
@@ -144,6 +145,7 @@ def test_send_germany_invoice_records_customer_managed_delivery(
     assert body["network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
     assert body["delivery_status"] == "accepted"
     assert body["provider_reference"].startswith("LOCAL-DE-")
+    assert body["provider_metadata"]["submission_channel"] == "local_no_network"
 
 
 def test_send_spain_invoice_records_local_fiscal_record(
@@ -162,3 +164,42 @@ def test_send_spain_invoice_records_local_fiscal_record(
     assert body["network"] == "LOCAL_FISCAL_RECORD_MOCK"
     assert body["delivery_status"] == "accepted"
     assert body["provider_reference"].startswith("LOCAL-ES-FISCAL-")
+    assert body["provider_metadata"]["mode"] == "local_fiscal_record_evidence"
+
+
+def test_send_poland_invoice_records_ksef_sandbox_submission(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    poland_invoice: dict,
+) -> None:
+    response = client.post(
+        "/v1/invoices/send",
+        json={"invoice": poland_invoice},
+        headers={**auth_headers, "Idempotency-Key": "send-pl-001"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["network"] == "KSEF_GOV_SANDBOX_MOCK"
+    assert body["delivery_status"] == "accepted"
+    assert body["provider_reference"].startswith("KSEF-PL-SANDBOX-")
+    assert body["provider_metadata"]["submission_channel"] == "direct_government_platform_sandbox"
+
+
+def test_send_romania_invoice_records_anaf_sandbox_submission(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    romania_invoice: dict,
+) -> None:
+    response = client.post(
+        "/v1/invoices/send",
+        json={"invoice": romania_invoice},
+        headers={**auth_headers, "Idempotency-Key": "send-ro-001"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["network"] == "RO_EFACTURA_GOV_SANDBOX_MOCK"
+    assert body["delivery_status"] == "accepted"
+    assert body["provider_reference"].startswith("ANAF-RO-SANDBOX-")
+    assert body["provider_metadata"]["submission_channel"] == "direct_government_platform_sandbox"

@@ -920,15 +920,15 @@
               <p class="lead">
                 Turn existing invoice JSON into country-specific e-invoice workflows: mandate checks, validation,
                 structured transformation, routing or local evidence, status tracking, and audit trails.
-                Belgium, Germany, and Spain sandbox profiles are implemented first.
+                Belgium, Germany, Poland, Romania, and Spain sandbox profiles are implemented first.
               </p>
               <div class="hero-actions">
                 <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#api-examples">View API docs</a>
                 <a class="button secondary" href="#pricing">See pricing</a>
               </div>
               <div class="trust-row">
-                <span>BE, DE, ES profiles</span>
-                <span>No-network support</span>
+                <span>BE, DE, PL, RO, ES profiles</span>
+                <span>No paid-network path</span>
                 <span>Idempotent send flow</span>
                 <span>Multi-region ready</span>
               </div>
@@ -962,7 +962,7 @@ submitted
 accepted</pre>
               </div>
               <div class="mockup-footer">
-                <div class="metric"><b>37</b><span class="muted">tests passing</span></div>
+                <div class="metric"><b>55</b><span class="muted">tests passing</span></div>
                 <div class="metric"><b>5</b><span class="muted">audit event types</span></div>
                 <div class="metric"><b>0</b><span class="muted">production compliance claims</span></div>
               </div>
@@ -982,13 +982,13 @@ accepted</pre>
                 <div class="step-num">01</div>
                 <div class="icon-box">BE</div>
                 <h3>Check the mandate</h3>
-                <p>Look up country and transaction metadata before transformation. The MVP supports Belgium, Germany, and Spain profiles.</p>
+                <p>Look up country and transaction metadata before transformation. The MVP supports Belgium, Germany, Poland, Romania, and Spain profiles.</p>
               </article>
               <article class="card">
                 <div class="step-num">02</div>
                 <div class="icon-box">XML</div>
                 <h3>Validate and transform</h3>
-                <p>Validate VAT IDs, routing fields where required, VAT rates, line totals, tax totals, and payable totals, then generate sandbox structured output.</p>
+                <p>Validate national tax ID checksums, routing fields where required, VAT rates, line totals, tax totals, and payable totals, then generate sandbox structured output.</p>
               </article>
               <article class="card">
                 <div class="step-num">03</div>
@@ -1022,7 +1022,7 @@ accepted</pre>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="PL">
                   <span>PL</span>
                   <strong>Poland</strong>
-                  <small>KSeF roadmap</small>
+                  <small>KSeF sandbox MVP</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="FR">
                   <span>FR</span>
@@ -1042,7 +1042,7 @@ accepted</pre>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="RO">
                   <span>RO</span>
                   <strong>Romania</strong>
-                  <small>RO e-Factura roadmap</small>
+                  <small>RO e-Factura MVP</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="ES">
                   <span>ES</span>
@@ -1109,9 +1109,9 @@ accepted</pre>
             </div>
 
             <p class="country-footnote">
-              Snapshot as of May 19, 2026. Country rules need legal review before production. Belgium, Germany, and
-              Spain are implemented as sandbox MVP profiles; the other country cards show the product roadmap and why
-              the architecture is valuable beyond one mandate.
+              Snapshot as of May 19, 2026. Country rules need legal review before production. Belgium, Germany,
+              Poland, Romania, and Spain are implemented as sandbox MVP profiles; the other country cards show the
+              product roadmap and why the architecture is valuable beyond one mandate.
             </p>
           </div>
         </section>
@@ -1152,6 +1152,11 @@ accepted</pre>
                 <div class="icon-box">06</div>
                 <h3>Standby write protection</h3>
                 <p>Non-writable regions reject new invoice mutations until promoted, reducing the risk of split-brain invoice processing during failover.</p>
+              </article>
+              <article class="card">
+                <div class="icon-box">07</div>
+                <h3>Production guardrails</h3>
+                <p>Readiness checks expose missing official validators, credentials, signing, and declaration steps instead of treating sandbox success as legal compliance.</p>
               </article>
             </div>
           </div>
@@ -1210,7 +1215,7 @@ No secrets in code</pre>
                 <p>For developers evaluating the workflow locally.</p>
                 <ul class="feature-list">
                   <li>Local/demo use</li>
-                  <li>Belgium, Germany, Spain profiles</li>
+                  <li>Belgium, Germany, Poland, Romania, Spain profiles</li>
                   <li>Validation and transform</li>
                   <li>Mock send or local evidence</li>
                   <li>OpenAPI docs</li>
@@ -1282,6 +1287,8 @@ No secrets in code</pre>
                   <tr><td>Monthly invoice workflows</td><td>Demo/local</td><td class="gold">5,000</td><td>25,000</td><td>Custom</td></tr>
                   <tr><td>Belgium B2B MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Germany no-network MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Poland KSeF sandbox profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
+                  <tr><td>Romania RO e-Factura sandbox profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Spain local-record MVP profile</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Structured sandbox transforms</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
                   <tr><td>Mock provider outcomes</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
@@ -1304,7 +1311,7 @@ No secrets in code</pre>
             <div class="faq-grid">
               <article class="card">
                 <h3>Is this production-certified?</h3>
-                <p>No. The current version is a sandbox MVP with mock providers and no certified Peppol, XRechnung, AEAT, or VERI*FACTU conformance.</p>
+                <p>No. The current version is a sandbox MVP with mock providers and no certified Peppol, XRechnung, KSeF, RO e-Factura, AEAT, or VERI*FACTU conformance.</p>
               </article>
               <article class="card">
                 <h3>Who is this for?</h3>
@@ -1315,8 +1322,8 @@ No secrets in code</pre>
                 <p>The MVP treats PDF alone as insufficient for these workflows. The point is structured validation, transformation, status, and evidence.</p>
               </article>
               <article class="card">
-                <h3>Can this support KSeF later?</h3>
-                <p>The architecture is designed for additional profiles, but Poland KSeF is not implemented in this repository.</p>
+                <h3>Does KSeF submit for real?</h3>
+                <p>No. The Poland profile models KSeF validation, FA(3)-style output, status, and audit shape without production authentication or official receipt handling.</p>
               </article>
             </div>
           </div>
@@ -1337,7 +1344,7 @@ No secrets in code</pre>
       <footer class="footer">
         <div class="container footer-inner">
           <span>InvoiceBridge API</span>
-          <span>Sandbox MVP. Not certified Peppol, XRechnung, VERI*FACTU, or tax authority submission.</span>
+          <span>Sandbox MVP. Not certified Peppol, XRechnung, KSeF, RO e-Factura, VERI*FACTU, or tax authority submission.</span>
         </div>
       </footer>
     </div>
@@ -1363,21 +1370,21 @@ No secrets in code</pre>
           sourceUrl: "https://einvoice.belgium.be/en/article/when-e-invoicing-mandatory",
         },
         PL: {
-          status: "Roadmap adapter",
+          status: "Implemented government-platform sandbox",
           title: "Poland KSeF",
           mandate:
             "KSeF obligation is phased: February 1, 2026 for large taxpayers, April 1, 2026 for other taxpayers, and January 1, 2027 for the lowest monthly sales threshold.",
-          network: "National e-Invoice System (KSeF)",
-          format: "KSeF structured XML profile",
+          network: "KSeF government-platform sandbox mock",
+          format: "FA(3)-style KSeF XML-like sandbox output",
           pain:
             "KSeF is a central clearance model, not a Peppol-only problem. Teams need schema mapping, authentication, official receipt handling, offline-mode decisions, and audit-safe status tracking.",
           solution:
-            "A KSeF adapter would reuse the InvoiceBridge lifecycle while swapping in Poland-specific validation, XML generation, submission, provider references, and receipt evidence.",
+            "The implemented Poland MVP validates Polish NIP identifiers, generates FA(3)-style sandbox XML, records deterministic KSeF sandbox provider references, and keeps status plus audit evidence without production KSeF credentials.",
           solves: [
-            "Country-specific mandate check for phased rollout",
-            "KSeF XML transformer behind the same API contract",
-            "Provider abstraction for official receipt and reference data",
-            "Audit trail for submitted, accepted, rejected, and retried events",
+            "Mandate check endpoint for Poland B2B",
+            "Polish NIP checksum validation",
+            "FA(3)-style KSeF XML-like transformation",
+            "KSeF sandbox provider status and audit trail",
           ],
           sourceLabel: "Official KSeF source",
           sourceUrl: "https://ksef.podatki.gov.pl/ksef-news/zasady-obowiazywania-ksef-i-przepisy-prawne",
@@ -1415,7 +1422,7 @@ No secrets in code</pre>
             "The implemented Germany MVP validates normalized invoice JSON, produces XRechnung/EN 16931-style sandbox XML, records customer-managed delivery status, and keeps the same audit evidence model.",
           solves: [
             "Mandate check endpoint for Germany B2B",
-            "German VAT ID and VAT-rate validation",
+            "German VAT ID checksum and VAT-rate validation",
             "XRechnung/EN 16931-style XML transformation",
             "Customer-managed delivery mock status and audit trail",
           ],
@@ -1443,21 +1450,21 @@ No secrets in code</pre>
           sourceUrl: "https://www1.agenziaentrate.gov.it/web_app_entrate/fatturazione_elettronica.html",
         },
         RO: {
-          status: "Roadmap adapter",
+          status: "Implemented government-platform sandbox",
           title: "Romania RO e-Factura",
           mandate:
             "RO e-Factura is mandatory for many domestic B2B/B2G flows, with B2C expansion from January 1, 2025 and ongoing scope clarifications.",
-          network: "RO e-Factura through Romanian tax authority systems",
-          format: "RO_CIUS XML profile",
+          network: "ANAF/SPV government-platform sandbox mock",
+          format: "RO_CIUS/UBL 2.1 XML-like sandbox output",
           pain:
             "Romania creates short submission windows and authority-system evidence requirements. Missed uploads and rejected XML can become finance operations problems quickly.",
           solution:
-            "A Romania adapter would validate RO-specific invoice data, transform to the local XML profile, submit through the authority provider boundary, and store references, seals, and rejection details.",
+            "The implemented Romania MVP validates Romanian VAT/CUI checksums, generates RO_CIUS/UBL 2.1-style sandbox XML, records deterministic ANAF sandbox references, and stores audit evidence without production SPV/OAuth submission.",
           solves: [
-            "Domestic-scope mandate check",
-            "RO XML transformer profile",
-            "Authority submission and response capture",
-            "Audit trail for upload, seal, rejection, and correction events",
+            "Mandate check endpoint for Romania B2B",
+            "Romanian VAT/CUI checksum and VAT-rate validation",
+            "RO_CIUS/UBL 2.1-style XML transformation",
+            "ANAF sandbox provider status and audit trail",
           ],
           sourceLabel: "ANAF clarification",
           sourceUrl: "https://static.anaf.ro/static/10/Anaf/Informatii_R/Clarificare%20RO_e_Factura.pdf",
@@ -1475,7 +1482,7 @@ No secrets in code</pre>
             "The implemented Spain MVP validates normalized invoice JSON, generates sandbox local fiscal-record evidence with current-record hashing, and records status without claiming AEAT submission or SIF certification.",
           solves: [
             "Mandate check endpoint for Spain B2B local-record mode",
-            "Spanish VAT/NIF and VAT-rate validation",
+            "Spanish VAT/NIF/CIF checksum and VAT-rate validation",
             "Record hash and software-system metadata warnings",
             "Local fiscal-record mock status and audit trail",
           ],

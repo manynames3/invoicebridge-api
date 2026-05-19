@@ -70,6 +70,23 @@ def test_germany_invoice_validates_without_buyer_routing_id(
     assert body["metadata"]["delivery_network"] == "CUSTOMER_MANAGED_DELIVERY_MOCK"
 
 
+def test_germany_invoice_rejects_bad_vat_id_checksum(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    invoice = dict(germany_invoice)
+    invoice["seller"] = dict(germany_invoice["seller"])
+    invoice["seller"]["vat_id"] = "DE123456789"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_SELLER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
+
+
 def test_germany_invoice_rejects_unsupported_vat_rate(
     client: TestClient,
     auth_headers: dict[str, str],
@@ -104,6 +121,23 @@ def test_spain_invoice_validates_and_keeps_local_record_metadata(
     assert body["metadata"]["delivery_model"] == "local_fiscal_record_no_network"
 
 
+def test_spain_invoice_rejects_bad_tax_id_checksum(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    spain_invoice: dict,
+) -> None:
+    invoice = dict(spain_invoice)
+    invoice["buyer"] = dict(spain_invoice["buyer"])
+    invoice["buyer"]["vat_id"] = "ESB87654321"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_BUYER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
+
+
 def test_spain_invoice_warns_when_fiscal_record_chain_metadata_is_missing(
     client: TestClient,
     auth_headers: dict[str, str],
@@ -121,3 +155,86 @@ def test_spain_invoice_warns_when_fiscal_record_chain_metadata_is_missing(
         "MISSING_PREVIOUS_RECORD_HASH",
         "MISSING_SOFTWARE_SYSTEM_ID",
     }
+
+
+def test_poland_invoice_validates_with_nip_checksum(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    poland_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/validate", json=poland_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is True
+    assert body["errors"] == []
+    assert body["required_format"] == "KSEF_FA3_XML_LIKE"
+    assert body["country_profile_used"] == "PL_B2B_KSEF_MVP"
+    assert body["metadata"]["delivery_network"] == "KSEF_GOV_SANDBOX_MOCK"
+
+
+def test_poland_invoice_rejects_bad_nip_checksum(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    poland_invoice: dict,
+) -> None:
+    invoice = dict(poland_invoice)
+    invoice["buyer"] = dict(poland_invoice["buyer"])
+    invoice["buyer"]["vat_id"] = "PL5260250275"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_BUYER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
+
+
+def test_romania_invoice_validates_for_government_platform_sandbox(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    romania_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/validate", json=romania_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is True
+    assert body["errors"] == []
+    assert body["required_format"] == "RO_CIUS_UBL_2_1_XML_LIKE"
+    assert body["country_profile_used"] == "RO_B2B_EFACTURA_MVP"
+    assert body["metadata"]["delivery_model"] == "direct_government_platform_sandbox"
+
+
+def test_romania_invoice_rejects_bad_cui_checksum(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    romania_invoice: dict,
+) -> None:
+    invoice = dict(romania_invoice)
+    invoice["buyer"] = dict(romania_invoice["buyer"])
+    invoice["buyer"]["vat_id"] = "RO87654321"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_BUYER_VAT_ID_CHECKSUM" in {error["code"] for error in body["errors"]}
+
+
+def test_romania_invoice_rejects_unsupported_vat_rate(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    romania_invoice: dict,
+) -> None:
+    invoice = dict(romania_invoice)
+    invoice["lines"] = [dict(romania_invoice["lines"][0])]
+    invoice["lines"][0]["vat_rate"] = "19"
+
+    response = client.post("/v1/invoices/validate", json=invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["compliant"] is False
+    assert "INVALID_VAT_RATE" in {error["code"] for error in body["errors"]}

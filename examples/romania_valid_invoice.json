@@ -1,0 +1,39 @@
+{
+  "country": "RO",
+  "transaction_type": "B2B",
+  "invoice_number": "INV-RO-2026-0001",
+  "issue_date": "2026-04-20",
+  "currency": "RON",
+  "seller": {
+    "name": "Acme Romania SRL",
+    "vat_id": "RO12345678",
+    "country_code": "RO"
+  },
+  "buyer": {
+    "name": "Globex Romania SRL",
+    "vat_id": "RO87654328",
+    "country_code": "RO"
+  },
+  "lines": [
+    {
+      "line_id": "1",
+      "description": "RO e-Factura sandbox workflow",
+      "quantity": "1",
+      "unit_price": "1000.00",
+      "vat_rate": "21",
+      "line_extension_amount": "1000.00",
+      "tax_amount": "210.00",
+      "total_amount": "1210.00"
+    }
+  ],
+  "totals": {
+    "tax_exclusive_amount": "1000.00",
+    "tax_amount": "210.00",
+    "tax_inclusive_amount": "1210.00",
+    "payable_amount": "1210.00"
+  },
+  "payment_terms": "Payment due within 30 days",
+  "metadata": {
+    "anaf_submission_context": "sandbox-spv-oauth"
+  }
+}

@@ -6,12 +6,12 @@
   "currency": "EUR",
   "seller": {
     "name": "Acme Deutschland GmbH",
-    "vat_id": "DE123456789",
+    "vat_id": "DE123456788",
     "country_code": "DE"
   },
   "buyer": {
     "name": "Globex Deutschland GmbH",
-    "vat_id": "DE987654321",
+    "vat_id": "DE987654328",
     "country_code": "DE"
   },
   "lines": [

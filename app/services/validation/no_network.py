@@ -1,14 +1,30 @@
 import re
 from decimal import Decimal, InvalidOperation
+from typing import Protocol
 
 from app.schemas.invoice import NormalizedInvoiceInput
 from app.schemas.validation import InvoiceValidationResponse, NormalizedTotals, ValidationIssue
-from app.services.country_profiles import DE_B2B_EN16931_MVP, ES_B2B_NON_VERIFACTU_MVP, CountryProfileDefinition
+from app.services.country_profiles import (
+    DE_B2B_EN16931_MVP,
+    ES_B2B_NON_VERIFACTU_MVP,
+    PL_B2B_KSEF_MVP,
+    RO_B2B_EFACTURA_MVP,
+    CountryProfileDefinition,
+)
 from app.services.money import decimal_text, money, same_money
 from app.services.validation.base import BaseInvoiceValidator
 
 DE_VAT_ID_PATTERN = re.compile(r"^DE[0-9]{9}$")
+PL_NIP_PATTERN = re.compile(r"^PL[0-9]{10}$")
+RO_VAT_ID_PATTERN = re.compile(r"^RO[0-9]{2,10}$")
 ES_VAT_ID_PATTERN = re.compile(r"^ES[A-Z0-9][A-Z0-9]{7}[A-Z0-9]$")
+SPANISH_NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+SPANISH_CIF_CONTROL_LETTERS = "JABCDEFGHI"
+
+
+class VatIdCheck(Protocol):
+    def __call__(self, vat_id: str) -> bool:
+        ...
 
 
 class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
@@ -19,11 +35,15 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
         country_name: str,
         vat_id_pattern: re.Pattern[str],
         vat_id_name: str,
+        vat_id_check: VatIdCheck | None = None,
+        vat_id_check_message: str | None = None,
     ) -> None:
         self.profile = profile
         self.country_name = country_name
         self.vat_id_pattern = vat_id_pattern
         self.vat_id_name = vat_id_name
+        self.vat_id_check = vat_id_check
+        self.vat_id_check_message = vat_id_check_message
 
     def validate(self, invoice: NormalizedInvoiceInput) -> InvoiceValidationResponse:
         errors: list[ValidationIssue] = []
@@ -66,6 +86,8 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
     def _delivery_model(self) -> str:
         if self.profile.name == ES_B2B_NON_VERIFACTU_MVP.name:
             return "local_fiscal_record_no_network"
+        if self.profile.name in {PL_B2B_KSEF_MVP.name, RO_B2B_EFACTURA_MVP.name}:
+            return "direct_government_platform_sandbox"
         return "customer_managed_no_network"
 
     def _validate_header(self, invoice: NormalizedInvoiceInput, errors: list[ValidationIssue]) -> None:
@@ -104,11 +126,12 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
         if not invoice.currency:
             errors.append(ValidationIssue(code="MISSING_CURRENCY", field="currency", message="Currency is required."))
         elif invoice.currency.upper() not in self.profile.supported_currencies:
+            currencies = ", ".join(sorted(self.profile.supported_currencies))
             errors.append(
                 ValidationIssue(
                     code="UNSUPPORTED_CURRENCY",
                     field="currency",
-                    message=f"The {self.country_name} MVP currently supports EUR invoices only.",
+                    message=f"The {self.country_name} MVP currently supports {currencies} invoices.",
                 )
             )
 
@@ -150,6 +173,14 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
                     message=f"{label} VAT/tax ID must match the {self.vat_id_name} format.",
                 )
             )
+        elif self.vat_id_check and not self.vat_id_check(vat_id):
+            errors.append(
+                ValidationIssue(
+                    code=f"INVALID_{party_name.upper()}_VAT_ID_CHECKSUM",
+                    field=f"{party_name}.vat_id",
+                    message=self.vat_id_check_message or f"{label} VAT/tax ID failed checksum validation.",
+                )
+            )
 
     def _validate_profile_specific_metadata(
         self,
@@ -157,6 +188,22 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
         warnings: list[ValidationIssue],
     ) -> None:
         if self.profile.name != ES_B2B_NON_VERIFACTU_MVP.name:
+            if self.profile.name == PL_B2B_KSEF_MVP.name and not invoice.metadata.get("ksef_schema_version"):
+                warnings.append(
+                    ValidationIssue(
+                        code="MISSING_KSEF_SCHEMA_VERSION",
+                        field="metadata.ksef_schema_version",
+                        message="Poland KSeF sandbox profiles should identify the target FA schema version.",
+                    )
+                )
+            if self.profile.name == RO_B2B_EFACTURA_MVP.name and not invoice.metadata.get("anaf_submission_context"):
+                warnings.append(
+                    ValidationIssue(
+                        code="MISSING_ANAF_SUBMISSION_CONTEXT",
+                        field="metadata.anaf_submission_context",
+                        message="Romania RO e-Factura production submission requires ANAF/SPV authorization context.",
+                    )
+                )
             return
         if not invoice.metadata.get("software_system_id"):
             warnings.append(
@@ -335,6 +382,79 @@ class NoNetworkStructuredInvoiceValidator(BaseInvoiceValidator):
         )
 
 
+def polish_nip_checksum(vat_id: str) -> bool:
+    digits = vat_id.removeprefix("PL")
+    if len(digits) != 10 or not digits.isdigit():
+        return False
+    weights = [6, 5, 7, 2, 3, 4, 5, 6, 7]
+    checksum = sum(int(digit) * weight for digit, weight in zip(digits[:9], weights, strict=True)) % 11
+    return checksum != 10 and checksum == int(digits[9])
+
+
+def german_vat_checksum(vat_id: str) -> bool:
+    digits = vat_id.removeprefix("DE")
+    if len(digits) != 9 or not digits.isdigit():
+        return False
+
+    product = 10
+    for digit in digits[:8]:
+        total = (int(digit) + product) % 10
+        if total == 0:
+            total = 10
+        product = (2 * total) % 11
+
+    checksum = 11 - product
+    if checksum == 10:
+        checksum = 0
+    return checksum == int(digits[8])
+
+
+def romanian_cui_checksum(vat_id: str) -> bool:
+    digits = vat_id.removeprefix("RO")
+    if not 2 <= len(digits) <= 10 or not digits.isdigit():
+        return False
+
+    control_digit = int(digits[-1])
+    payload = digits[:-1]
+    weights = [7, 5, 3, 2, 1, 7, 5, 3, 2]
+    total = sum(int(digit) * weights[index] for index, digit in enumerate(reversed(payload)))
+    checksum = (total * 10) % 11
+    if checksum == 10:
+        checksum = 0
+    return checksum == control_digit
+
+
+def spanish_tax_id_checksum(vat_id: str) -> bool:
+    identifier = vat_id.removeprefix("ES").upper()
+    if re.match(r"^[0-9]{8}[A-Z]$", identifier):
+        return _spanish_nif_checksum(identifier[:8], identifier[8])
+    if re.match(r"^[XYZ][0-9]{7}[A-Z]$", identifier):
+        numeric_prefix = {"X": "0", "Y": "1", "Z": "2"}[identifier[0]]
+        return _spanish_nif_checksum(numeric_prefix + identifier[1:8], identifier[8])
+    if re.match(r"^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$", identifier):
+        return _spanish_cif_checksum(identifier)
+    return False
+
+
+def _spanish_nif_checksum(digits: str, control_letter: str) -> bool:
+    return SPANISH_NIF_LETTERS[int(digits) % 23] == control_letter
+
+
+def _spanish_cif_checksum(identifier: str) -> bool:
+    digits = identifier[1:8]
+    control = identifier[8]
+    total = 0
+    for index, digit_text in enumerate(digits, start=1):
+        digit = int(digit_text)
+        if index % 2:
+            doubled = digit * 2
+            total += doubled // 10 + doubled % 10
+        else:
+            total += digit
+    control_digit = (10 - (total % 10)) % 10
+    return control == str(control_digit) or control == SPANISH_CIF_CONTROL_LETTERS[control_digit]
+
+
 class DEEN16931MVPValidator(NoNetworkStructuredInvoiceValidator):
     def __init__(self) -> None:
         super().__init__(
@@ -342,6 +462,32 @@ class DEEN16931MVPValidator(NoNetworkStructuredInvoiceValidator):
             country_name="Germany",
             vat_id_pattern=DE_VAT_ID_PATTERN,
             vat_id_name="German VAT ID format DE followed by 9 digits",
+            vat_id_check=german_vat_checksum,
+            vat_id_check_message="German VAT ID failed checksum validation.",
+        )
+
+
+class PLKSeFMVPValidator(NoNetworkStructuredInvoiceValidator):
+    def __init__(self) -> None:
+        super().__init__(
+            profile=PL_B2B_KSEF_MVP,
+            country_name="Poland",
+            vat_id_pattern=PL_NIP_PATTERN,
+            vat_id_name="Polish NIP format PL followed by 10 digits",
+            vat_id_check=polish_nip_checksum,
+            vat_id_check_message="Polish NIP failed checksum validation.",
+        )
+
+
+class ROROEFacturaMVPValidator(NoNetworkStructuredInvoiceValidator):
+    def __init__(self) -> None:
+        super().__init__(
+            profile=RO_B2B_EFACTURA_MVP,
+            country_name="Romania",
+            vat_id_pattern=RO_VAT_ID_PATTERN,
+            vat_id_name="Romanian VAT/CUI format RO followed by 2 to 10 digits",
+            vat_id_check=romanian_cui_checksum,
+            vat_id_check_message="Romanian VAT/CUI failed checksum validation.",
         )
 
 
@@ -352,4 +498,6 @@ class ESNonVerifactuMVPValidator(NoNetworkStructuredInvoiceValidator):
             country_name="Spain",
             vat_id_pattern=ES_VAT_ID_PATTERN,
             vat_id_name="Spanish VAT/NIF format ES followed by 9 alphanumeric characters",
+            vat_id_check=spanish_tax_id_checksum,
+            vat_id_check_message="Spanish VAT/NIF/CIF failed checksum validation.",
         )

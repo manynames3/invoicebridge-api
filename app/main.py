@@ -5,7 +5,7 @@ from uuid import uuid4
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 
-from app.api.routes import countries, health, invoices, mandates, regions, tenants, webhooks
+from app.api.routes import compliance, countries, health, invoices, mandates, regions, tenants, webhooks
 from app.core.config import get_settings
 from app.core.logging import configure_logging, request_id_context
 from app.core.rate_limit import NoopRateLimiter
@@ -36,13 +36,15 @@ app = FastAPI(
     title="InvoiceBridge API",
     description=(
         "MVP API for validating normalized invoice JSON, transforming it into sandbox structured invoice "
-        "outputs, simulating Peppol-style or customer-managed routing, tracking status, and storing audit "
-        "trails. This is not a production-certified Peppol, KSeF, VERI*FACTU, or tax-authority submission service."
+        "outputs, simulating Peppol-style, customer-managed, government-platform, or local fiscal-record "
+        "routing, tracking status, exporting documents, and storing audit trails. This is not a "
+        "production-certified Peppol, KSeF, RO e-Factura, VERI*FACTU, or tax-authority submission service."
     ),
     version="0.1.0",
     lifespan=lifespan,
     openapi_tags=[
         {"name": "health", "description": "Operational health checks."},
+        {"name": "compliance", "description": "Production readiness and official validation guardrails."},
         {"name": "countries", "description": "Supported country and network profiles."},
         {"name": "regions", "description": "Runtime region metadata and multi-region topology."},
         {"name": "tenants", "description": "Tenant home-region and failover routing metadata."},
@@ -113,13 +115,18 @@ def _seed_country_profiles() -> None:
                         mandated=profile.mandated,
                         pdf_allowed_as_compliant_invoice=profile.pdf_allowed_as_compliant_invoice,
                         implementation_status=profile.implementation_status,
-                        profile_metadata={"notes": profile.notes},
+                        profile_metadata={
+                            "notes": profile.notes,
+                            "capabilities": list(profile.capabilities),
+                            "production_readiness": profile.production_readiness,
+                        },
                     )
                 )
         db.commit()
 
 
 app.include_router(health.router)
+app.include_router(compliance.router, prefix="/v1", dependencies=[Depends(require_api_key)])
 app.include_router(countries.router, prefix="/v1", dependencies=[Depends(require_api_key)])
 app.include_router(regions.router, prefix="/v1", dependencies=[Depends(require_api_key)])
 app.include_router(tenants.router, prefix="/v1", dependencies=[Depends(require_api_key)])

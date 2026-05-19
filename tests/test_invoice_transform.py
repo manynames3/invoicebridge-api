@@ -17,6 +17,8 @@ def test_transform_valid_invoice(
     assert body["format"] == "PEPPOL_BIS_BILLING_3_UBL_LIKE"
     assert body["processing_region"] == "test-region-a"
     assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert body["document_url"] == f"/v1/invoices/{body['invoice_id']}/document"
+    assert len(body["document_sha256"]) == 64
     assert body["audit_log_id"]
 
 
@@ -84,6 +86,7 @@ def test_create_invoice_from_scratch_generates_valid_transform(
     body = response.json()
     assert body["status"] == "transformed"
     assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert body["document_url"] == f"/v1/invoices/{body['invoice_id']}/document"
 
 
 def test_transform_germany_invoice_uses_xrechnung_like_format(
@@ -101,6 +104,23 @@ def test_transform_germany_invoice_uses_xrechnung_like_format(
     assert "XRechnung/EN 16931" in body["xml_preview"]
 
 
+def test_transformed_document_endpoint_returns_full_xml(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    germany_invoice: dict,
+) -> None:
+    transformed = client.post("/v1/invoices/transform", json=germany_invoice, headers=auth_headers)
+
+    assert transformed.status_code == 200
+    invoice_id = transformed.json()["invoice_id"]
+    response = client.get(f"/v1/invoices/{invoice_id}/document", headers=auth_headers)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/xml")
+    assert "InvoiceBridgeSandboxInvoice" in response.text
+    assert germany_invoice["invoice_number"] in response.text
+
+
 def test_transform_spain_invoice_uses_local_fiscal_record_format(
     client: TestClient,
     auth_headers: dict[str, str],
@@ -114,3 +134,33 @@ def test_transform_spain_invoice_uses_local_fiscal_record_format(
     assert body["format"] == "NON_VERIFACTU_FISCAL_RECORD_XML_LIKE"
     assert "InvoiceBridgeFiscalRecord" in body["xml_preview"]
     assert "CurrentRecordHash" in body["xml_preview"]
+
+
+def test_transform_poland_invoice_uses_ksef_like_format(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    poland_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/transform", json=poland_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "transformed"
+    assert body["format"] == "KSEF_FA3_XML_LIKE"
+    assert "InvoiceBridgeKSeFInvoice" in body["xml_preview"]
+    assert "FA(3)" in body["xml_preview"]
+
+
+def test_transform_romania_invoice_uses_ro_cius_like_format(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    romania_invoice: dict,
+) -> None:
+    response = client.post("/v1/invoices/transform", json=romania_invoice, headers=auth_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "transformed"
+    assert body["format"] == "RO_CIUS_UBL_2_1_XML_LIKE"
+    assert "InvoiceBridgeSandboxInvoice" in body["xml_preview"]
+    assert "RO_CIUS/UBL 2.1" in body["xml_preview"]

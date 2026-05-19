@@ -59,6 +59,12 @@ class MockPeppolProvider(BaseEInvoiceProvider):
                 "delivery_status": status,
                 "provider_reference": provider_reference,
                 "rejection_reason": rejection_reason,
-                "metadata": metadata,
+                "metadata": {
+                    **metadata,
+                    "mode": "mock_peppol_access_point",
+                    "external_network_submission": False,
+                    "submission_channel": "peppol_mock",
+                    "legal_compliance": "sandbox_demo_only",
+                },
             },
         )

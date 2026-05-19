@@ -1,0 +1,39 @@
+{
+  "country": "PL",
+  "transaction_type": "B2B",
+  "invoice_number": "INV-PL-2026-0001",
+  "issue_date": "2026-04-15",
+  "currency": "PLN",
+  "seller": {
+    "name": "Acme Polska Sp. z o.o.",
+    "vat_id": "PL5250007738",
+    "country_code": "PL"
+  },
+  "buyer": {
+    "name": "Globex Polska Sp. z o.o.",
+    "vat_id": "PL5260250274",
+    "country_code": "PL"
+  },
+  "lines": [
+    {
+      "line_id": "1",
+      "description": "KSeF sandbox workflow",
+      "quantity": "2",
+      "unit_price": "1000.00",
+      "vat_rate": "23",
+      "line_extension_amount": "2000.00",
+      "tax_amount": "460.00",
+      "total_amount": "2460.00"
+    }
+  ],
+  "totals": {
+    "tax_exclusive_amount": "2000.00",
+    "tax_amount": "460.00",
+    "tax_inclusive_amount": "2460.00",
+    "payable_amount": "2460.00"
+  },
+  "payment_terms": "Payment due within 14 days",
+  "metadata": {
+    "ksef_schema_version": "FA(3)"
+  }
+}

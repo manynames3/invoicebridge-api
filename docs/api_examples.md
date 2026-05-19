@@ -26,6 +26,16 @@ Region topology:
 curl -s -H "X-API-Key: $API_KEY" "$BASE_URL/v1/regions"
 ```
 
+Production readiness blockers:
+
+```bash
+curl -s -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/v1/compliance/production-readiness?country=DE&transaction_type=B2B"
+
+curl -s -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/v1/compliance/production-readiness?country=PL&transaction_type=B2B"
+```
+
 Register a region-aware tenant:
 
 ```bash
@@ -57,6 +67,12 @@ curl -s -H "X-API-Key: $API_KEY" \
   "$BASE_URL/v1/mandates/check?country=DE&transaction_type=B2B"
 
 curl -s -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/v1/mandates/check?country=PL&transaction_type=B2B"
+
+curl -s -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/v1/mandates/check?country=RO&transaction_type=B2B"
+
+curl -s -H "X-API-Key: $API_KEY" \
   "$BASE_URL/v1/mandates/check?country=ES&transaction_type=B2B"
 ```
 
@@ -72,6 +88,16 @@ curl -s -X POST "$BASE_URL/v1/invoices/validate" \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   --data @examples/germany_valid_invoice.json
+
+curl -s -X POST "$BASE_URL/v1/invoices/validate" \
+  -H "X-API-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  --data @examples/poland_valid_invoice.json
+
+curl -s -X POST "$BASE_URL/v1/invoices/validate" \
+  -H "X-API-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  --data @examples/romania_valid_invoice.json
 
 curl -s -X POST "$BASE_URL/v1/invoices/validate" \
   -H "X-API-Key: $API_KEY" \
@@ -96,9 +122,37 @@ curl -s -X POST "$BASE_URL/v1/invoices/transform" \
 
 curl -s -X POST "$BASE_URL/v1/invoices/transform" \
   -H "X-API-Key: $API_KEY" \
+  -H "Idempotency-Key: transform-demo-pl-001" \
+  -H "Content-Type: application/json" \
+  --data @examples/poland_valid_invoice.json
+
+curl -s -X POST "$BASE_URL/v1/invoices/transform" \
+  -H "X-API-Key: $API_KEY" \
+  -H "Idempotency-Key: transform-demo-ro-001" \
+  -H "Content-Type: application/json" \
+  --data @examples/romania_valid_invoice.json
+
+curl -s -X POST "$BASE_URL/v1/invoices/transform" \
+  -H "X-API-Key: $API_KEY" \
   -H "Idempotency-Key: transform-demo-es-001" \
   -H "Content-Type: application/json" \
   --data @examples/spain_valid_invoice.json
+```
+
+Transform responses include `document_url` and `document_sha256` so clients can retrieve and verify the stored sandbox artifact.
+
+Download transformed sandbox XML:
+
+```bash
+curl -s -H "X-API-Key: $API_KEY" \
+  "$BASE_URL/v1/invoices/REPLACE_ME/document"
+```
+
+Run configured official validator command:
+
+```bash
+curl -s -X POST "$BASE_URL/v1/invoices/REPLACE_ME/official-validate" \
+  -H "X-API-Key: $API_KEY"
 ```
 
 Send:

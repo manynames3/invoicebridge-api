@@ -12,8 +12,8 @@ Not every e-invoicing obligation starts as a central network submission problem.
 
 Add Germany and Spain as no-network MVP profiles with explicit mock provider networks:
 
-- `DE_B2B_EN16931_MVP` validates German VAT IDs, EUR invoices, and Germany VAT rates, then produces XRechnung/EN 16931-style UBL-like XML for customer-managed delivery.
-- `ES_B2B_NON_VERIFACTU_MVP` validates Spanish VAT/NIF IDs, EUR invoices, and Spain VAT rates, then produces NON-VERI*FACTU-style local fiscal-record XML-like evidence with hash metadata.
+- `DE_B2B_EN16931_MVP` validates German VAT ID checksums, EUR invoices, and Germany VAT rates, then produces XRechnung/EN 16931-style UBL-like XML for customer-managed delivery.
+- `ES_B2B_NON_VERIFACTU_MVP` validates Spanish VAT/NIF/CIF checksums, EUR invoices, and Spain VAT rates, then produces NON-VERI*FACTU-style local fiscal-record XML-like evidence with hash metadata.
 
 ## Consequences
 

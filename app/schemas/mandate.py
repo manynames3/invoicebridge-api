@@ -13,6 +13,8 @@ class MandateCheckResponse(BaseModel):
     pdf_allowed_as_compliant_invoice: bool
     notes: str
     implementation_status: str
+    capabilities: list[str]
+    production_readiness: str
 
 
 class CountryProfileResponse(BaseModel):
@@ -23,3 +25,5 @@ class CountryProfileResponse(BaseModel):
     implementation_status: str
     profile_name: str
     notes: str
+    capabilities: list[str]
+    production_readiness: str

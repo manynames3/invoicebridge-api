@@ -20,6 +20,8 @@ class CountryProfileDefinition:
     requires_vat_ids: bool
     supported_currencies: set[str]
     allowed_vat_rates: set[str]
+    capabilities: tuple[str, ...]
+    production_readiness: str
 
 
 BE_B2B_PEPPOL_MVP = CountryProfileDefinition(
@@ -40,6 +42,18 @@ BE_B2B_PEPPOL_MVP = CountryProfileDefinition(
     requires_vat_ids=True,
     supported_currencies={"EUR"},
     allowed_vat_rates={"0", "6", "12", "21"},
+    capabilities=(
+        "mandate_check",
+        "normalized_invoice_validation",
+        "ubl_like_xml_transform",
+        "xml_export",
+        "mock_peppol_submission",
+        "status_tracking",
+        "audit_trail",
+    ),
+    production_readiness=(
+        "Sandbox workflow only; production Peppol access point and official conformance testing required."
+    ),
 )
 
 DE_B2B_EN16931_MVP = CountryProfileDefinition(
@@ -61,6 +75,87 @@ DE_B2B_EN16931_MVP = CountryProfileDefinition(
     requires_vat_ids=True,
     supported_currencies={"EUR"},
     allowed_vat_rates={"0", "7", "19"},
+    capabilities=(
+        "mandate_check",
+        "normalized_invoice_validation",
+        "german_vat_id_checksum",
+        "xrechnung_en16931_like_xml_transform",
+        "xml_export",
+        "customer_managed_delivery_record",
+        "status_tracking",
+        "audit_trail",
+    ),
+    production_readiness=(
+        "Usable for no-network validation/export demos; official KoSIT/XRechnung validation required for production."
+    ),
+)
+
+PL_B2B_KSEF_MVP = CountryProfileDefinition(
+    name="PL_B2B_KSEF_MVP",
+    country="PL",
+    transaction_type="B2B",
+    mandated=True,
+    effective_date=date(2026, 2, 1),
+    required_format="KSEF_FA3_XML_LIKE",
+    delivery_network="KSEF_GOV_SANDBOX_MOCK",
+    pdf_allowed_as_compliant_invoice=False,
+    implementation_status="MVP_SANDBOX_DIRECT_GOV_API_READY",
+    notes=(
+        "Poland KSeF sandbox profile. This MVP validates Polish NIP identifiers and transforms invoice data into "
+        "FA(3)-inspired XML-like output with a deterministic KSeF sandbox provider boundary; it does not authenticate "
+        "with, submit to, or receive official receipts from production KSeF."
+    ),
+    requires_buyer_routing_id=False,
+    requires_vat_ids=True,
+    supported_currencies={"PLN", "EUR"},
+    allowed_vat_rates={"0", "5", "8", "23"},
+    capabilities=(
+        "mandate_check",
+        "normalized_invoice_validation",
+        "polish_nip_checksum",
+        "ksef_fa3_like_xml_transform",
+        "xml_export",
+        "ksef_sandbox_provider_reference",
+        "status_tracking",
+        "audit_trail",
+    ),
+    production_readiness=(
+        "Sandbox workflow only; production KSeF credentials, encryption, API contract, and UPO handling required."
+    ),
+)
+
+RO_B2B_EFACTURA_MVP = CountryProfileDefinition(
+    name="RO_B2B_EFACTURA_MVP",
+    country="RO",
+    transaction_type="B2B",
+    mandated=True,
+    effective_date=date(2024, 1, 1),
+    required_format="RO_CIUS_UBL_2_1_XML_LIKE",
+    delivery_network="RO_EFACTURA_GOV_SANDBOX_MOCK",
+    pdf_allowed_as_compliant_invoice=False,
+    implementation_status="MVP_SANDBOX_DIRECT_GOV_API_READY",
+    notes=(
+        "Romania RO e-Factura sandbox profile. This MVP validates Romanian VAT identifiers and transforms invoice "
+        "data into RO_CIUS/UBL 2.1-inspired XML-like output with a deterministic ANAF sandbox provider boundary; "
+        "it does not authenticate with SPV, submit to ANAF, or download official signed responses."
+    ),
+    requires_buyer_routing_id=False,
+    requires_vat_ids=True,
+    supported_currencies={"RON", "EUR"},
+    allowed_vat_rates={"0", "11", "21"},
+    capabilities=(
+        "mandate_check",
+        "normalized_invoice_validation",
+        "romanian_cui_checksum",
+        "ro_cius_ubl_like_xml_transform",
+        "xml_export",
+        "anaf_sandbox_provider_reference",
+        "status_tracking",
+        "audit_trail",
+    ),
+    production_readiness=(
+        "Sandbox workflow only; ANAF/SPV OAuth, upload status polling, and signed response handling required."
+    ),
 )
 
 ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
@@ -82,11 +177,26 @@ ES_B2B_NON_VERIFACTU_MVP = CountryProfileDefinition(
     requires_vat_ids=True,
     supported_currencies={"EUR"},
     allowed_vat_rates={"0", "4", "10", "21"},
+    capabilities=(
+        "mandate_check",
+        "normalized_invoice_validation",
+        "spanish_tax_id_checksum",
+        "non_verifactu_fiscal_record_transform",
+        "xml_export",
+        "record_hash_evidence",
+        "status_tracking",
+        "audit_trail",
+    ),
+    production_readiness=(
+        "Usable for local fiscal-record evidence demos; official SIF/VERI*FACTU conformance remains required."
+    ),
 )
 
 COUNTRY_PROFILES: dict[tuple[str, str], CountryProfileDefinition] = {
     (BE_B2B_PEPPOL_MVP.country, BE_B2B_PEPPOL_MVP.transaction_type): BE_B2B_PEPPOL_MVP,
     (DE_B2B_EN16931_MVP.country, DE_B2B_EN16931_MVP.transaction_type): DE_B2B_EN16931_MVP,
+    (PL_B2B_KSEF_MVP.country, PL_B2B_KSEF_MVP.transaction_type): PL_B2B_KSEF_MVP,
+    (RO_B2B_EFACTURA_MVP.country, RO_B2B_EFACTURA_MVP.transaction_type): RO_B2B_EFACTURA_MVP,
     (ES_B2B_NON_VERIFACTU_MVP.country, ES_B2B_NON_VERIFACTU_MVP.transaction_type): ES_B2B_NON_VERIFACTU_MVP,
 }
 
@@ -107,6 +217,8 @@ def list_country_profiles() -> list[CountryProfileResponse]:
             implementation_status=profile.implementation_status,
             profile_name=profile.name,
             notes=profile.notes,
+            capabilities=list(profile.capabilities),
+            production_readiness=profile.production_readiness,
         )
         for profile in COUNTRY_PROFILES.values()
     ]
@@ -123,4 +235,6 @@ def mandate_response(profile: CountryProfileDefinition) -> MandateCheckResponse:
         pdf_allowed_as_compliant_invoice=profile.pdf_allowed_as_compliant_invoice,
         notes=profile.notes,
         implementation_status=profile.implementation_status,
+        capabilities=list(profile.capabilities),
+        production_readiness=profile.production_readiness,
     )

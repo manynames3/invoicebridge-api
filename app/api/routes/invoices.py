@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Header
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.audit import AuditTrailResponse
+from app.schemas.compliance import OfficialValidationResponse
 from app.schemas.invoice import (
     CreateInvoiceRequest,
     InvoiceStatusResponse,
@@ -28,7 +29,8 @@ def service(db: Session = Depends(get_db)) -> InvoiceService:
     summary="Validate a normalized invoice",
     description=(
         "Validates invoice JSON against the selected MVP country profile. Belgium uses a Peppol-style "
-        "sandbox profile; Germany and Spain use no-network sandbox profiles."
+        "sandbox profile; Germany and Spain use no-network sandbox profiles; Poland and Romania use "
+        "direct government-platform sandbox profiles."
     ),
 )
 def validate_invoice(
@@ -65,7 +67,7 @@ def transform_invoice(
     summary="Submit or record an invoice through the configured mock provider",
     description=(
         "Accepts an existing invoice_id or invoice payload, then records deterministic "
-        "sandbox provider results for Peppol-style or no-network profiles."
+        "sandbox provider results for Peppol-style, no-network, or government-platform profiles."
     ),
 )
 def send_invoice(
@@ -90,6 +92,39 @@ def invoice_status(
     invoice_service: InvoiceService = Depends(service),
 ) -> InvoiceStatusResponse:
     return invoice_service.status(invoice_id)
+
+
+@router.get(
+    "/{invoice_id}/document",
+    response_class=PlainTextResponse,
+    summary="Download the transformed sandbox XML document",
+    description=(
+        "Returns the full transformed XML-like document stored for the invoice. "
+        "This is sandbox/demo output, not a production-certified authority document."
+    ),
+)
+def transformed_document(
+    invoice_id: str,
+    invoice_service: InvoiceService = Depends(service),
+) -> PlainTextResponse:
+    xml = invoice_service.transformed_document(invoice_id)
+    return PlainTextResponse(content=xml, media_type="application/xml")
+
+
+@router.post(
+    "/{invoice_id}/official-validate",
+    response_model=OfficialValidationResponse,
+    summary="Run the configured official XML validator for an invoice",
+    description=(
+        "Runs the deployment-configured official validator command for the invoice country. "
+        "If no validator command is configured, the response is explicit and does not mark the invoice compliant."
+    ),
+)
+def official_validate_invoice(
+    invoice_id: str,
+    invoice_service: InvoiceService = Depends(service),
+) -> OfficialValidationResponse:
+    return invoice_service.official_validate(invoice_id)
 
 
 @router.get(

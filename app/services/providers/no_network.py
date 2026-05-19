@@ -9,6 +9,8 @@ from app.services.providers.base import BaseEInvoiceProvider, ProviderSubmission
 class BaseNoNetworkProvider(BaseEInvoiceProvider):
     reference_prefix: str
     mode: str
+    submission_channel = "local_no_network"
+    external_government_submission = False
 
     def submit(
         self,
@@ -56,6 +58,8 @@ class BaseNoNetworkProvider(BaseEInvoiceProvider):
                     **metadata,
                     "mode": self.mode,
                     "external_network_submission": False,
+                    "external_government_submission": self.external_government_submission,
+                    "submission_channel": self.submission_channel,
                     "legal_compliance": "sandbox_demo_only",
                 },
             },
@@ -72,3 +76,17 @@ class LocalFiscalRecordProvider(BaseNoNetworkProvider):
     network = "LOCAL_FISCAL_RECORD_MOCK"
     reference_prefix = "LOCAL-ES-FISCAL"
     mode = "local_fiscal_record_evidence"
+
+
+class KSeFSandboxProvider(BaseNoNetworkProvider):
+    network = "KSEF_GOV_SANDBOX_MOCK"
+    reference_prefix = "KSEF-PL-SANDBOX"
+    mode = "ksef_government_api_sandbox"
+    submission_channel = "direct_government_platform_sandbox"
+
+
+class ROEFacturaSandboxProvider(BaseNoNetworkProvider):
+    network = "RO_EFACTURA_GOV_SANDBOX_MOCK"
+    reference_prefix = "ANAF-RO-SANDBOX"
+    mode = "ro_efactura_government_api_sandbox"
+    submission_channel = "direct_government_platform_sandbox"

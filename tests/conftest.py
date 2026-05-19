@@ -13,6 +13,7 @@ os.environ["DATA_RESIDENCY_REGION"] = "test-residency"
 os.environ["ACTIVE_REGIONS"] = "test-region-a,test-region-b"
 os.environ["FAILOVER_REGION"] = "test-region-b"
 
+from app.core.config import get_settings  # noqa: E402
 from app.db.models import Base  # noqa: E402
 from app.db.session import engine  # noqa: E402
 from app.main import app  # noqa: E402
@@ -20,9 +21,11 @@ from app.main import app  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def reset_database() -> Generator[None, None, None]:
+    get_settings.cache_clear()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
+    get_settings.cache_clear()
     Base.metadata.drop_all(bind=engine)
 
 
@@ -97,12 +100,12 @@ def germany_invoice() -> dict:
         "currency": "EUR",
         "seller": {
             "name": "Acme Deutschland GmbH",
-            "vat_id": "DE123456789",
+            "vat_id": "DE123456788",
             "country_code": "DE",
         },
         "buyer": {
             "name": "Globex Deutschland GmbH",
-            "vat_id": "DE987654321",
+            "vat_id": "DE987654328",
             "country_code": "DE",
         },
         "lines": [
@@ -128,6 +131,88 @@ def germany_invoice() -> dict:
 
 
 @pytest.fixture
+def poland_invoice() -> dict:
+    return {
+        "country": "PL",
+        "transaction_type": "B2B",
+        "invoice_number": "INV-PL-2026-0001",
+        "issue_date": "2026-04-15",
+        "currency": "PLN",
+        "seller": {
+            "name": "Acme Polska Sp. z o.o.",
+            "vat_id": "PL5250007738",
+            "country_code": "PL",
+        },
+        "buyer": {
+            "name": "Globex Polska Sp. z o.o.",
+            "vat_id": "PL5260250274",
+            "country_code": "PL",
+        },
+        "lines": [
+            {
+                "line_id": "1",
+                "description": "KSeF sandbox workflow",
+                "quantity": "2",
+                "unit_price": "1000.00",
+                "vat_rate": "23",
+                "line_extension_amount": "2000.00",
+                "tax_amount": "460.00",
+                "total_amount": "2460.00",
+            }
+        ],
+        "totals": {
+            "tax_exclusive_amount": "2000.00",
+            "tax_amount": "460.00",
+            "tax_inclusive_amount": "2460.00",
+            "payable_amount": "2460.00",
+        },
+        "payment_terms": "Payment due within 14 days",
+        "metadata": {"ksef_schema_version": "FA(3)"},
+    }
+
+
+@pytest.fixture
+def romania_invoice() -> dict:
+    return {
+        "country": "RO",
+        "transaction_type": "B2B",
+        "invoice_number": "INV-RO-2026-0001",
+        "issue_date": "2026-04-20",
+        "currency": "RON",
+        "seller": {
+            "name": "Acme Romania SRL",
+            "vat_id": "RO12345678",
+            "country_code": "RO",
+        },
+        "buyer": {
+            "name": "Globex Romania SRL",
+            "vat_id": "RO87654328",
+            "country_code": "RO",
+        },
+        "lines": [
+            {
+                "line_id": "1",
+                "description": "RO e-Factura sandbox workflow",
+                "quantity": "1",
+                "unit_price": "1000.00",
+                "vat_rate": "21",
+                "line_extension_amount": "1000.00",
+                "tax_amount": "210.00",
+                "total_amount": "1210.00",
+            }
+        ],
+        "totals": {
+            "tax_exclusive_amount": "1000.00",
+            "tax_amount": "210.00",
+            "tax_inclusive_amount": "1210.00",
+            "payable_amount": "1210.00",
+        },
+        "payment_terms": "Payment due within 30 days",
+        "metadata": {"anaf_submission_context": "sandbox-spv-oauth"},
+    }
+
+
+@pytest.fixture
 def spain_invoice() -> dict:
     return {
         "country": "ES",
@@ -137,12 +222,12 @@ def spain_invoice() -> dict:
         "currency": "EUR",
         "seller": {
             "name": "Acme Espana SL",
-            "vat_id": "ESA12345678",
+            "vat_id": "ESA12345674",
             "country_code": "ES",
         },
         "buyer": {
             "name": "Globex Espana SL",
-            "vat_id": "ESB87654321",
+            "vat_id": "ESB87654323",
             "country_code": "ES",
         },
         "lines": [

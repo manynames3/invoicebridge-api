@@ -6,12 +6,12 @@
   "currency": "EUR",
   "seller": {
     "name": "Acme Espana SL",
-    "vat_id": "ESA12345678",
+    "vat_id": "ESA12345674",
     "country_code": "ES"
   },
   "buyer": {
     "name": "Globex Espana SL",
-    "vat_id": "ESB87654321",
+    "vat_id": "ESB87654323",
     "country_code": "ES"
   },
   "lines": [

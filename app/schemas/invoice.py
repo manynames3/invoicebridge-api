@@ -75,6 +75,8 @@ class TransformInvoiceResponse(BaseModel):
     format: str
     processing_region: str
     xml_preview: str
+    document_url: str
+    document_sha256: str
     warnings: list[ValidationIssue]
     audit_log_id: str
 
@@ -96,6 +98,7 @@ class SendInvoiceResponse(BaseModel):
     provider_reference: str
     processing_region: str
     rejection_reason: str | None = None
+    provider_metadata: dict[str, Any]
     audit_log_id: str
 
 

@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     data_residency_region: str = "local"
     active_regions: str = "local-dev"
     failover_region: str | None = None
+    xrechnung_validator_command: str | None = None
+    ksef_schema_validator_command: str | None = None
+    ksef_api_base_url: str | None = None
+    ksef_credentials_configured: bool = False
+    ro_efactura_schema_validator_command: str | None = None
+    ro_efactura_api_base_url: str | None = None
+    ro_efactura_oauth_configured: bool = False
+    spanish_sif_validator_command: str | None = None
+    spanish_sif_signing_configured: bool = False
+    spanish_sif_responsible_declaration_ready: bool = False
 
 
 @lru_cache

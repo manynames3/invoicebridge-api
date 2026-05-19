@@ -10,6 +10,7 @@ from app.services.transform.base import BaseInvoiceTransformer
 CUSTOMIZATION_LABELS = {
     "BE_B2B_PEPPOL_MVP": "InvoiceBridge MVP UBL-like Peppol BIS Billing 3.0 inspired output; not legally compliant",
     "DE_B2B_EN16931_MVP": "InvoiceBridge MVP XRechnung/EN 16931 UBL-like output; not legally compliant",
+    "RO_B2B_EFACTURA_MVP": "InvoiceBridge MVP RO_CIUS/UBL 2.1 XML-like output; not legally compliant",
 }
 
 
@@ -144,6 +145,58 @@ class FiscalRecordTransformer(BaseInvoiceTransformer):
         element = ET.SubElement(root, tag)
         ET.SubElement(element, "Name").text = getattr(party, "name", None) or ""
         ET.SubElement(element, "TaxID").text = getattr(party, "vat_id", None) or ""
+
+    def _amount(self, value: Decimal) -> str:
+        return f"{money(value):.2f}"
+
+
+class KSeFLikeTransformer(BaseInvoiceTransformer):
+    """Generate sandbox XML-like output inspired by Poland KSeF FA(3)."""
+
+    def transform(self, invoice: NormalizedInvoiceInput, validation: InvoiceValidationResponse) -> str:
+        root = ET.Element("InvoiceBridgeKSeFInvoice")
+        root.set("profile", validation.country_profile_used)
+        root.set("format", validation.required_format)
+        root.set("legal_compliance", "sandbox_demo_only")
+        ET.SubElement(root, "SchemaCode").text = str(invoice.metadata.get("ksef_schema_version", "FA(3)"))
+        ET.SubElement(root, "InvoiceNumber").text = invoice.invoice_number or ""
+        ET.SubElement(root, "IssueDate").text = invoice.issue_date.isoformat() if invoice.issue_date else ""
+        ET.SubElement(root, "Currency").text = invoice.currency or "PLN"
+
+        subject1 = ET.SubElement(root, "Podmiot1")
+        self._party(subject1, invoice.seller)
+        subject2 = ET.SubElement(root, "Podmiot2")
+        self._party(subject2, invoice.buyer)
+
+        totals = validation.normalized_totals
+        totals_element = ET.SubElement(root, "Fa")
+        ET.SubElement(totals_element, "P_13_1", currencyID=totals.currency).text = self._amount(
+            totals.tax_exclusive_amount
+        )
+        ET.SubElement(totals_element, "P_14_1", currencyID=totals.currency).text = self._amount(totals.tax_amount)
+        ET.SubElement(totals_element, "P_15", currencyID=totals.currency).text = self._amount(totals.payable_amount)
+        for index, line in enumerate(invoice.lines, start=1):
+            self._line(totals_element, index, line)
+
+        ET.indent(root, space="  ")
+        return ET.tostring(root, encoding="unicode", xml_declaration=True)
+
+    def _party(self, root: ET.Element, party: object) -> None:
+        ET.SubElement(root, "Nazwa").text = getattr(party, "name", None) or ""
+        ET.SubElement(root, "NIP").text = (getattr(party, "vat_id", None) or "").removeprefix("PL")
+
+    def _line(self, root: ET.Element, index: int, line: InvoiceLine) -> None:
+        quantity = line.quantity or Decimal("0")
+        unit_price = line.unit_price or Decimal("0")
+        vat_rate = line.vat_rate or Decimal("0")
+        line_extension = money(quantity * unit_price)
+        line_element = ET.SubElement(root, "FaWiersz")
+        ET.SubElement(line_element, "NrWierszaFa").text = line.line_id or str(index)
+        ET.SubElement(line_element, "P_7").text = line.description or ""
+        ET.SubElement(line_element, "P_8B").text = str(quantity)
+        ET.SubElement(line_element, "P_9A").text = self._amount(unit_price)
+        ET.SubElement(line_element, "P_11").text = self._amount(line_extension)
+        ET.SubElement(line_element, "P_12").text = str(vat_rate)
 
     def _amount(self, value: Decimal) -> str:
         return f"{money(value):.2f}"

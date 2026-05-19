@@ -10,6 +10,7 @@ from app.core.logging import mask_identifier
 from app.core.regions import accepts_regional_writes, current_region
 from app.db.models import AuditEvent, Invoice, InvoiceSubmission, Tenant, ValidationResult
 from app.schemas.audit import AuditEventResponse, AuditTrailResponse
+from app.schemas.compliance import OfficialValidationResponse
 from app.schemas.invoice import (
     CreateInvoiceRequest,
     InvoiceStatusResponse,
@@ -22,7 +23,9 @@ from app.schemas.invoice import (
 )
 from app.schemas.validation import InvoiceValidationResponse
 from app.services.audit import create_audit_event
+from app.services.checksum import stable_payload_hash
 from app.services.money import money
+from app.services.official_validation import validate_official_document
 from app.services.providers.registry import get_provider_for_network
 from app.services.tenants import tenant_region_decision
 from app.services.transform.registry import get_transformer_for_format
@@ -157,6 +160,8 @@ class InvoiceService:
             format=db_invoice.required_format,
             processing_region=db_invoice.processing_region,
             xml_preview=(db_invoice.transformed_xml or "")[:2000],
+            document_url=self._document_url(db_invoice.id),
+            document_sha256=stable_payload_hash(db_invoice.transformed_xml or ""),
             warnings=validation.warnings,
             audit_log_id=transformed_event.id,
         )
@@ -253,6 +258,7 @@ class InvoiceService:
             provider_reference=submission.provider_reference,
             processing_region=submission.processing_region,
             rejection_reason=submission.rejection_reason,
+            provider_metadata=submission.response_payload.get("metadata", {}),
             audit_log_id=terminal_event.id,
         )
 
@@ -287,6 +293,30 @@ class InvoiceService:
             for event in invoice.audit_events
         ]
         return AuditTrailResponse(invoice_id=invoice.id, events=events)
+
+    def transformed_document(self, invoice_id: str) -> str:
+        invoice = self._get_invoice(invoice_id)
+        if not invoice.transformed_xml:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "INVOICE_DOCUMENT_NOT_AVAILABLE",
+                    "message": "A transformed XML document is only available after successful transformation.",
+                },
+            )
+        return invoice.transformed_xml
+
+    def official_validate(self, invoice_id: str) -> OfficialValidationResponse:
+        invoice = self._get_invoice(invoice_id)
+        if not invoice.transformed_xml:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "INVOICE_DOCUMENT_NOT_AVAILABLE",
+                    "message": "Official validation requires a successfully transformed XML document.",
+                },
+            )
+        return validate_official_document(invoice, invoice.transformed_xml)
 
     def create_from_scratch(
         self,
@@ -472,6 +502,8 @@ class InvoiceService:
             format=invoice.required_format,
             processing_region=invoice.processing_region,
             xml_preview=(invoice.transformed_xml or "")[:2000],
+            document_url=self._document_url(invoice.id),
+            document_sha256=stable_payload_hash(invoice.transformed_xml or ""),
             warnings=warnings,
             audit_log_id=latest_event.id if latest_event else "",
         )
@@ -573,6 +605,7 @@ class InvoiceService:
             provider_reference=submission.provider_reference,
             processing_region=submission.processing_region,
             rejection_reason=submission.rejection_reason,
+            provider_metadata=submission.response_payload.get("metadata", {}),
             audit_log_id=latest_event.id if latest_event else "",
         )
 
@@ -594,3 +627,6 @@ class InvoiceService:
         validation = invoice.validation_result or {}
         metadata = validation.get("metadata", {})
         return metadata.get("delivery_network", "PEPPOL_MOCK")
+
+    def _document_url(self, invoice_id: str) -> str:
+        return f"/v1/invoices/{invoice_id}/document"
