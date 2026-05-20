@@ -40,6 +40,8 @@ def test_status_after_send(
     assert body["current_status"] == "accepted"
     assert body["validation_status"] == "passed"
     assert body["delivery_status"] == "accepted"
+    assert body["official_validation_status"] == "not_run"
+    assert body["official_validation_result_id"] is None
     assert body["processing_region"] == "test-region-a"
     assert body["retry_available"] is False
 

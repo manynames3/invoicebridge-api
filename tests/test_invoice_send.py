@@ -58,6 +58,28 @@ def test_send_payload_transforms_first(
     assert response.json()["delivery_status"] == "accepted"
 
 
+def test_send_idempotency_rejects_different_payload(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    valid_invoice: dict,
+) -> None:
+    first = client.post(
+        "/v1/invoices/send",
+        json={"invoice": valid_invoice},
+        headers={**auth_headers, "Idempotency-Key": "send-key-mismatch"},
+    )
+    changed_invoice = {**valid_invoice, "invoice_number": "INV-BE-2026-CHANGED"}
+    second = client.post(
+        "/v1/invoices/send",
+        json={"invoice": changed_invoice},
+        headers={**auth_headers, "Idempotency-Key": "send-key-mismatch"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 409
+    assert second.json()["detail"]["code"] == "IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST"
+
+
 def test_send_requires_exactly_one_invoice_reference(
     client: TestClient,
     auth_headers: dict[str, str],

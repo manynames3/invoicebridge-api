@@ -65,4 +65,4 @@ Artifact Registry image
 - No Terraform modules are included yet.
 - No AWS or GCP production deployment is currently provisioned by this repository.
 - No managed database replication is simulated locally.
-- No tenant authentication or authorization boundary is implemented yet.
+- Tenant-scoped API keys are implemented, but no full account-management, key-rotation, or IAM integration is included yet.

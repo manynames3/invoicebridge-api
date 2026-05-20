@@ -1,7 +1,7 @@
 .PHONY: install run test lint typecheck migrate setup-xrechnung-validator setup-spanish-sif-assets docker-up docker-down docker-multiregion-up docker-multiregion-down smoke-multiregion
 
 install:
-	python -m pip install -e ".[dev]"
+	python3 -m pip install -e ".[dev]"
 
 run:
 	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

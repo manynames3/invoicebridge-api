@@ -6,6 +6,7 @@ InvoiceBridge can support no-paid-provider paths, but that is not the same as no
 
 - `/v1/compliance/production-readiness` returns explicit blockers for each country profile.
 - `/v1/invoices/{invoice_id}/official-validate` runs the configured country validator command against the stored XML artifact.
+- Official validation responses are persisted with validator name, pass/fail status, exit code, document SHA-256, and an audit event.
 - Transform responses include `document_url` and `document_sha256` so customers can retrieve and verify generated artifacts.
 - Provider responses include metadata that identifies whether the flow was mock, local, direct-government mock, or externally submitted.
 

@@ -7,6 +7,14 @@ export BASE_URL=http://localhost:8000
 export API_KEY=local-dev-key
 ```
 
+Fast Germany demo:
+
+```bash
+./examples/germany_demo.sh
+```
+
+That script walks through health, Germany readiness, validation, transform, configured official validation, status, and audit trail using `examples/germany_valid_invoice.json`.
+
 Health:
 
 ```bash
@@ -49,6 +57,18 @@ curl -s -X POST "$BASE_URL/v1/tenants" \
     "data_residency_region": "EU",
     "failover_region": "local-standby"
   }'
+```
+
+The create response includes an `api_key` returned once. Use that key for tenant-scoped invoice operations:
+
+```bash
+export TENANT_API_KEY=ib_tenant_REPLACE_ME
+
+curl -s -X POST "$BASE_URL/v1/invoices/transform" \
+  -H "X-API-Key: $TENANT_API_KEY" \
+  -H "Idempotency-Key: transform-tenant-demo-001" \
+  -H "Content-Type: application/json" \
+  --data @examples/germany_valid_invoice.json
 ```
 
 Resolve tenant routing:
@@ -157,6 +177,18 @@ curl -s -X POST "$BASE_URL/v1/invoices/REPLACE_ME/official-validate" \
   -H "X-API-Key: $API_KEY"
 ```
 
+The response includes `validation_result_id` and `document_sha256`, and the audit trail records `official_validation_passed`, `official_validation_failed`, or `official_validation_not_configured`.
+
+Status responses include the latest official validation evidence:
+
+```json
+{
+  "official_validation_status": "passed",
+  "official_validation_result_id": "REPLACE_ME",
+  "official_validation_document_sha256": "REPLACE_ME"
+}
+```
+
 For Spain SIF schema checks, install AEAT assets first:
 
 ```bash
@@ -188,4 +220,13 @@ curl -s -X POST "$BASE_URL/v1/webhooks/test" \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"invoice_id":"REPLACE_ME","target_url":"https://example.test/webhook"}'
+```
+
+Archive and redact stored invoice payload/XML:
+
+```bash
+curl -s -X POST "$BASE_URL/v1/invoices/REPLACE_ME/archive" \
+  -H "X-API-Key: $TENANT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"reason":"customer retention request"}'
 ```

@@ -22,6 +22,7 @@ class CountryProductionReadinessResponse(BaseModel):
 
 class OfficialValidationResponse(BaseModel):
     invoice_id: str
+    validation_result_id: str | None = None
     country: str
     required_format: str
     validator_name: str
@@ -29,6 +30,7 @@ class OfficialValidationResponse(BaseModel):
     passed: bool
     exit_code: int | None = None
     message: str
+    document_sha256: str | None = None
     stdout_excerpt: str | None = None
     stderr_excerpt: str | None = None
 

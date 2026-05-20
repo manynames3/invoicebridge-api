@@ -1,10 +1,39 @@
 # InvoiceBridge API
 
-InvoiceBridge API is a production-style FastAPI backend that accepts normalized invoice JSON, selects a country mandate profile, validates totals and tax rules, transforms valid invoices into structured outputs, simulates routing or local evidence recording, tracks status, and stores an audit trail. It is designed as a B2B infrastructure API for ERP, accounting SaaS, billing platforms, marketplaces, and cross-border sellers that need e-invoicing compliance workflows without replacing their existing invoice system.
+InvoiceBridge API helps ERP, accounting SaaS, billing platforms, and B2B marketplaces add e-invoicing validation, structured XML output, status tracking, and audit evidence without replacing the invoice system they already use. The sellable MVP wedge is Germany XRechnung: send existing invoice JSON, validate business rules and totals, generate XRechnung UBL, run an official validator command when configured, and retain invoice-level evidence.
 
-This is a portfolio MVP, not a certified e-invoicing gateway. Germany is usable only when generated invoices pass official XRechnung validation. Legal production support for Belgium, Poland, Romania, and Spain is coming soon after required access-point, tax-authority, signing, declaration, or conformance work is completed.
+This is a Germany-first portfolio MVP, not a certified government submission gateway. Germany is usable only when generated invoices pass official XRechnung validation. Legal production support for Belgium, Poland, Romania, and Spain is coming soon after required access-point, tax-authority, signing, declaration, or conformance work is completed.
 
 Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev)
+
+## Try The Germany Workflow
+
+Run the API, then execute the focused demo script:
+
+```bash
+docker-compose up --build
+```
+
+In another terminal:
+
+```bash
+./examples/germany_demo.sh
+```
+
+The demo checks service health, lists Germany production-readiness blockers, creates a demo tenant with a tenant-scoped API key, validates `examples/germany_valid_invoice.json`, transforms it into XRechnung UBL, runs the configured official validator command, then returns status and audit trail evidence.
+
+For local Python development:
+
+```bash
+python3 -m pip install -e ".[dev]"
+cp .env.example .env
+make run
+./examples/germany_demo.sh
+```
+
+`.env.example` points at the Docker Compose Postgres database. If you run the API directly with `make run`, start Postgres first with `docker-compose up -d db`, or override `DATABASE_URL=sqlite:///./invoicebridge.db` for a local SQLite demo.
+
+Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhost:8000/docs) after starting the API.
 
 ## About
 
@@ -12,9 +41,7 @@ The project models the core workflow of an e-invoicing compliance provider:
 
 Existing invoice JSON -> mandate profile -> validation -> structured transformation -> mock routing or local evidence record -> status tracking -> audit evidence.
 
-The supported MVP profiles are Belgium B2B Peppol-style, Germany XRechnung 3.0 UBL, Poland KSeF FA(3)-style, Romania RO e-Factura/RO_CIUS-style, and Spain NON-VERI*FACTU-style local SIF record-integrity evidence. The code is structured so future country profiles or a real Peppol/government-platform adapter can be added behind the same validation, transformation, provider, and audit boundaries.
-
-Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhost:8000/docs) after starting the API.
+The current paid-MVP direction is Germany XRechnung validation and evidence for teams that already produce invoice JSON. Belgium, Poland, Romania, and Spain remain implemented evaluation profiles and roadmap signals, not production claims. The code is structured so future country profiles or a real Peppol/government-platform adapter can be added behind the same validation, transformation, provider, and audit boundaries.
 
 ## Tech Stack
 
@@ -37,13 +64,15 @@ Local OpenAPI docs are available at [http://localhost:8000/docs](http://localhos
 - Spain B2B local SIF record validation for Spanish VAT/NIF/CIF checksums, EUR invoices, allowed VAT rates, producer/software identity, VERI*FACTU capability metadata, SHA-256 record/event chaining, AEAT `RegFactuSistemaFacturacion` / `RegistroAlta` XML output, tax breakdowns, and AEAT QR payload draft output.
 - XML generation using structured XML APIs instead of string assembly.
 - Provider abstraction with deterministic Peppol-style, customer-managed, government-platform, and local-record mock outcomes.
-- Idempotency support for transform/send flows.
+- Idempotency support for transform/send flows, including request-hash checks that reject accidental key reuse with a different payload.
 - Persistent invoice, submission, validation result, and audit event models.
 - Audit trail events include SHA-256 hashes of relevant payloads where practical.
+- Official validator command results are persisted with document hashes and audit events.
 - Region-aware tenant routing with tenant home region, data-residency region, and failover region metadata.
 - Multi-region runtime metadata with `/health/ready`, `/v1/regions`, `/v1/tenants`, regional response headers, and persisted processing regions on invoice/submission/audit records.
 - Standby-region write protection rejects new invoice mutations unless the deployment role is `local`, `primary`, or `active`.
-- API key authentication for `/v1` endpoints, request/correlation IDs, JSON structured logging, VAT ID masking in audit metadata, and payload size checks.
+- Admin and tenant-scoped API key authentication for `/v1` endpoints, request/correlation IDs, JSON structured logging, VAT ID masking in audit metadata, and payload size checks.
+- Invoice archive/redaction endpoint that removes stored invoice payload/XML while preserving audit hashes.
 - OpenAPI tags/descriptions, examples, Dockerized runtime, Alembic migrations, and CI lint/type/test workflow.
 
 ## MVP Scope
@@ -79,6 +108,7 @@ Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `
 - Transforms valid Spain invoices into AEAT-shaped local SIF `RegFactuSistemaFacturacion` XML with software identity, `RegistroAlta` fields, current/previous record hashing, event hashing, tax breakdowns, and QR payload draft data.
 - Stores invoice payloads, transformed XML, validation results, submissions, and audit events.
 - Exposes the stored transformed XML document with a document URL and SHA-256 hash for downstream export/testing.
+- Runs a configured official validator command and persists the validation result, document hash, and audit evidence.
 - Exposes production-readiness guardrails so evaluation-only profiles are not misrepresented as legal production integrations.
 - Simulates provider submission or local evidence recording through deterministic mock providers.
 - Tracks invoice status and exposes audit trail evidence hashes.
@@ -89,7 +119,7 @@ Belgium, Germany, and Spain currently support `EUR`. Poland supports `PLN` and `
 - It does not submit to Belgian, Polish, Romanian, Spanish, German, or EU tax authority systems.
 - It does not guarantee official UBL, XRechnung, KSeF, RO e-Factura, Peppol, VERI*FACTU, or Spain B2B platform conformance unless the relevant official validator/integration is configured and passing.
 - It does not provide legal advice or jurisdiction-specific compliance certification.
-- It does not implement tenant-scoped authentication, billing, real webhooks, or production retention policies yet.
+- It does not implement self-serve billing, real webhooks, automated retention schedules, or production legal/compliance policy management yet.
 
 This MVP produces XRechnung UBL for Germany, AEAT-shaped local SIF record XML for Spain, and UBL-like/KSeF-like output for other evaluation profiles. Production use requires official schema validation, certified provider or platform integration where applicable, country-specific legal review, and conformance testing.
 
@@ -180,15 +210,7 @@ docker-compose.multi-region.yml  local two-region simulation with separate Postg
 
 ## Local Setup
 
-```bash
-python -m pip install -e ".[dev]"
-cp .env.example .env
-make run
-```
-
-The API runs at [http://localhost:8000](http://localhost:8000).
-
-For Postgres-backed local development:
+Recommended demo runtime:
 
 ```bash
 docker-compose up --build
@@ -196,13 +218,26 @@ docker-compose up --build
 
 The API container runs on port `8000`, and Postgres runs on port `5432`.
 
+Python-only local development:
+
+```bash
+python3 -m pip install -e ".[dev]"
+cp .env.example .env
+docker-compose up -d db
+make run
+```
+
+The API runs at [http://localhost:8000](http://localhost:8000).
+
 ## Authentication
 
-All `/v1` endpoints require:
+All `/v1` endpoints require an API key:
 
 ```http
 X-API-Key: local-dev-key
 ```
+
+The local `API_KEY` is the admin key used for setup tasks such as creating tenants. `POST /v1/tenants` returns a tenant API key once; tenant keys are stored hashed and can only access that tenant's invoice workflows.
 
 `GET /health` and `/docs` are public for local operations.
 
@@ -300,6 +335,32 @@ curl -s -X POST http://localhost:8000/v1/tenants \
 
 More examples are in [docs/api_examples.md](docs/api_examples.md).
 
+Focused Germany demo:
+
+```bash
+./examples/germany_demo.sh
+```
+
+Suggested talk track for a live demo is in [docs/demo_script.md](docs/demo_script.md).
+
+Create a tenant and receive a tenant-scoped API key. The key is returned once and stored hashed:
+
+```bash
+curl -s -X POST http://localhost:8000/v1/tenants \
+  -H "X-API-Key: local-dev-key" \
+  -H "Content-Type: application/json" \
+  -d '{"tenant_id":"acme-eu","name":"Acme EU","home_region":"local-dev","data_residency_region":"EU","failover_region":"local-standby"}'
+```
+
+Archive and redact an invoice while keeping audit evidence:
+
+```bash
+curl -s -X POST http://localhost:8000/v1/invoices/{invoice_id}/archive \
+  -H "X-API-Key: {tenant_api_key}" \
+  -H "Content-Type: application/json" \
+  -d '{"reason":"customer retention request"}'
+```
+
 ## Sample Validation Response
 
 ```json
@@ -358,11 +419,26 @@ The production recommendation is regional-primary writes with a standby region, 
 
 The public sales landing page is a static site in `site/` and is deployed separately on Cloudflare Pages at [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev).
 
+## Monetization Direction
+
+The practical first paid offer is an assisted Germany XRechnung pilot for a billing, ERP, accounting SaaS, or marketplace team:
+
+- Customer sends real invoice JSON examples.
+- InvoiceBridge validates required XRechnung fields, totals, VAT IDs, and payment metadata.
+- InvoiceBridge generates XRechnung UBL and stores document hashes, official-validator results, status, and audit events.
+- The customer keeps delivery/customer routing under their existing process until a production delivery integration is needed.
+
+Suggested pilot packaging: setup plus monthly API/support fee. Full self-serve billing, key rotation UI, webhook delivery, automated retention schedules, and production policy management remain roadmap work.
+
+Pilot intake is captured through the [Germany XRechnung pilot issue template](.github/ISSUE_TEMPLATE/germany-pilot.yml), which asks for workflow, volume, pain point, and sanitized payload shape without requesting sensitive invoice data.
+
 ## Data Retention And Audit Trail
 
-The MVP stores invoice payloads, transformed XML, validation results, provider responses, and audit events in the configured database. Audit events include metadata and SHA-256 hashes of relevant payloads where practical. Logs mask VAT IDs and avoid writing full invoice payloads at info level.
+The MVP stores invoice payloads, transformed XML, validation results, provider responses, official-validator results, and audit events in the configured database. Audit events include metadata and SHA-256 hashes of relevant payloads where practical. Logs mask VAT IDs and avoid writing full invoice payloads at info level.
 
-Production retention should be implemented per tenant, jurisdiction, customer contract, and data processing agreement. That work is intentionally not included in this MVP.
+For customer-controlled cleanup, `POST /v1/invoices/{invoice_id}/archive` marks an invoice archived and redacts the stored original payload and transformed XML by default while preserving audit hashes. Automated retention schedules should still be implemented per tenant, jurisdiction, customer contract, and data processing agreement before broader production rollout.
+
+Do not put sensitive production invoice data into an unreviewed public demo deployment. Use local examples or customer-approved test payloads until tenant-scoped API keys, retention terms, and privacy terms are configured for that deployment.
 
 ## Limitations
 
@@ -375,7 +451,7 @@ See [docs/limitations.md](docs/limitations.md) for compliance, security, and ope
 3. Official XRechnung, KSeF, RO e-Factura, and Spain SIF/VERI*FACTU conformance adapters
 4. Real KSeF and ANAF/SPV credential flows
 5. Webhook delivery
-6. Tenant-scoped auth and account management
+6. Tenant account management, key rotation, and audit exports
 7. Usage-based billing/metering
 8. Dashboard
 9. Terraform/AWS deployment

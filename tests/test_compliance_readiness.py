@@ -109,6 +109,17 @@ def test_official_validation_is_explicit_when_validator_is_not_configured(
     assert body["configured"] is False
     assert body["passed"] is False
     assert body["validator_name"] == "XRechnung/EN16931 validator"
+    assert body["validation_result_id"]
+    assert len(body["document_sha256"]) == 64
+
+    audit = client.get(f"/v1/invoices/{invoice_id}/audit-trail", headers=auth_headers)
+    assert "official_validation_not_configured" in {event["event_type"] for event in audit.json()["events"]}
+
+    status_response = client.get(f"/v1/invoices/status/{invoice_id}", headers=auth_headers)
+    status_body = status_response.json()
+    assert status_body["official_validation_status"] == "not_configured"
+    assert status_body["official_validation_result_id"] == body["validation_result_id"]
+    assert status_body["official_validation_document_sha256"] == body["document_sha256"]
 
 
 def test_official_validation_runs_configured_command(
@@ -139,6 +150,20 @@ def test_official_validation_runs_configured_command(
     assert body["configured"] is True
     assert body["passed"] is True
     assert body["exit_code"] == 0
+    assert body["validation_result_id"]
+    assert len(body["document_sha256"]) == 64
+
+    audit = client.get(f"/v1/invoices/{invoice_id}/audit-trail", headers=auth_headers)
+    events = audit.json()["events"]
+    official_event = next(event for event in events if event["event_type"] == "official_validation_passed")
+    assert official_event["metadata"]["passed"] is True
+    assert len(official_event["metadata"]["document_sha256"]) == 64
+
+    status_response = client.get(f"/v1/invoices/status/{invoice_id}", headers=auth_headers)
+    status_body = status_response.json()
+    assert status_body["official_validation_status"] == "passed"
+    assert status_body["official_validation_result_id"] == body["validation_result_id"]
+    assert status_body["official_validation_document_sha256"] == body["document_sha256"]
 
 
 def test_spain_responsible_declaration_draft_endpoint(

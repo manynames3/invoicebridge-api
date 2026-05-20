@@ -1,9 +1,12 @@
+from secrets import token_urlsafe
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.regions import accepts_regional_writes, current_region
-from app.db.models import Tenant
-from app.schemas.tenant import TenantCreateRequest, TenantRegionDecisionResponse, TenantResponse
+from app.core.security import hash_api_key
+from app.db.models import Tenant, TenantApiKey
+from app.schemas.tenant import TenantCreateRequest, TenantCreateResponse, TenantRegionDecisionResponse, TenantResponse
 
 
 def tenant_response(tenant: Tenant) -> TenantResponse:
@@ -24,7 +27,7 @@ class TenantService:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def create(self, request: TenantCreateRequest) -> TenantResponse:
+    def create(self, request: TenantCreateRequest) -> TenantCreateResponse:
         existing = self.db.get(Tenant, request.tenant_id)
         if existing is not None:
             raise HTTPException(
@@ -36,6 +39,7 @@ class TenantService:
                 },
             )
 
+        api_key = generate_tenant_api_key()
         tenant = Tenant(
             id=request.tenant_id,
             name=request.name,
@@ -45,10 +49,19 @@ class TenantService:
             active=True,
             tenant_metadata=request.metadata,
         )
+        tenant.api_keys.append(
+            TenantApiKey(
+                name="Default tenant key",
+                key_prefix=api_key[:16],
+                key_hash=hash_api_key(api_key),
+                active=True,
+            )
+        )
         self.db.add(tenant)
         self.db.commit()
         self.db.refresh(tenant)
-        return tenant_response(tenant)
+        response = tenant_response(tenant).model_dump()
+        return TenantCreateResponse(**response, api_key=api_key, api_key_prefix=api_key[:16])
 
     def get(self, tenant_id: str) -> TenantResponse:
         return tenant_response(self.require_active_tenant(tenant_id))
@@ -95,3 +108,7 @@ def tenant_region_decision(tenant: Tenant) -> TenantRegionDecisionResponse:
         accepts_writes=region in allowed_regions and accepts_regional_writes(),
         routing_strategy="tenant-home-region-with-promoted-failover",
     )
+
+
+def generate_tenant_api_key() -> str:
+    return f"ib_tenant_{token_urlsafe(32)}"

@@ -26,16 +26,16 @@ This repository is an MVP, not a certified e-invoicing network service.
 
 ## Security
 
-- API key auth is basic and suitable only for local/demo usage.
-- Tenant routing metadata is implemented, but tenant-scoped authentication and authorization boundaries are not.
+- API key auth supports one admin key plus tenant-scoped keys stored as SHA-256 hashes. A production deployment should still add key rotation, expiration, per-key permissions, and stronger secret-management controls.
+- Tenant-scoped invoice authorization is implemented for invoice writes, status, documents, official validation, archive/redaction, and audit trail reads.
 - Rate limiting is represented by an interface and no-op implementation.
 - Secrets are expected through environment variables and are not stored in code.
 
 ## Operations
 
 - Webhooks are recorded as mock audit events; no outbound delivery is attempted.
-- Data retention policies are documented conceptually but not enforced.
-- Observability is limited to structured logs and request IDs.
+- Invoice archive/redaction is implemented for customer-initiated cleanup of stored payload/XML while preserving audit hashes. Automated retention schedules are not implemented.
+- Observability is limited to structured logs, request IDs, persisted invoice events, and persisted official-validator results.
 - Multi-region support is an application-level design and local simulation; production still needs managed database replication, failover automation, regional secrets, and centralized observability.
 - Auto table creation is enabled for MVP convenience; production should run migrations explicitly.
 - Payload size enforcement relies on `Content-Length`; production should also enforce streamed body limits at the gateway/app server layer.

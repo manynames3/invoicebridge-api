@@ -110,11 +110,29 @@ class InvoiceStatusResponse(BaseModel):
     validation_status: str
     delivery_status: str
     provider_reference: str | None = None
+    official_validation_status: str
+    official_validation_result_id: str | None = None
+    official_validation_checked_at: datetime | None = None
+    official_validation_document_sha256: str | None = None
     processing_region: str
     created_at: datetime
     updated_at: datetime
     last_error: str | None = None
     retry_available: bool
+
+
+class ArchiveInvoiceRequest(BaseModel):
+    reason: str | None = Field(default=None, max_length=300)
+    redact_payload: bool = True
+
+
+class ArchiveInvoiceResponse(BaseModel):
+    invoice_id: str
+    tenant_id: str | None = None
+    status: str
+    redacted_payload: bool
+    redacted_document: bool
+    audit_log_id: str
 
 
 class CreateInvoiceItem(BaseModel):

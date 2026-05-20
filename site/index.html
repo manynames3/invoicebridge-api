@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>InvoiceBridge API | E-invoicing workflow layer</title>
+    <title>InvoiceBridge API | Germany XRechnung workflow layer</title>
     <meta
       name="description"
-      content="InvoiceBridge API helps ERP, accounting, billing, and marketplace teams add country-specific e-invoicing validation, transformation, status, and audit workflows without replacing their billing system."
+      content="InvoiceBridge API helps ERP, accounting, billing, and marketplace teams add Germany XRechnung validation, structured XML output, status, and audit evidence without replacing their billing system."
     />
     <meta name="theme-color" content="#0c0c13" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -576,7 +576,7 @@
       }
 
       .pricing-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
       }
 
       .card {
@@ -915,22 +915,22 @@
         <section class="hero">
           <div class="container hero-grid">
             <div>
-              <div class="eyebrow">Compliance workflow layer for billing platforms</div>
-              <h1 class="display">Keep your billing system. <em>Add e-invoicing workflows.</em></h1>
+              <div class="eyebrow">Germany-first XRechnung workflow for billing platforms</div>
+              <h1 class="display">Keep your billing system. <em>Add compliant invoice workflows.</em></h1>
               <p class="lead">
-                Connect the invoice data you already produce. InvoiceBridge sits between your ERP, accounting system,
-                billing platform, or marketplace and country mandates, adding validation, structured output, status,
+                Send the invoice JSON you already produce. InvoiceBridge validates Germany XRechnung requirements,
+                generates structured UBL XML, runs official validation when configured, and keeps invoice-level status
                 and audit evidence without forcing a billing rebuild.
               </p>
               <div class="hero-actions">
-                <a class="button primary" href="#countries">See country workflows</a>
-                <a class="button secondary" href="#pricing">See pricing</a>
+                <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#try-the-germany-workflow">Run Germany demo</a>
+                <a class="button secondary" href="#pricing">Review pilot pricing</a>
               </div>
               <div class="trust-row">
-                <span>Keep ERP in place</span>
-                <span>Catch invoice errors early</span>
-                <span>Audit evidence by invoice</span>
-                <span>Germany validation-gated</span>
+                <span>XRechnung UBL export</span>
+                <span>Official validator evidence</span>
+                <span>Audit trail by invoice</span>
+                <span>No ERP migration</span>
               </div>
             </div>
 
@@ -948,23 +948,27 @@
               <div class="mockup-body">
                 <pre class="code-panel"><strong>POST</strong> /v1/invoices/transform
 -> existing invoice JSON received
--> country profile selected
--> VAT IDs, totals, and routing fields checked
--> structured XML generated
+-> Germany profile selected
+-> VAT IDs, totals, and buyer reference checked
+-> XRechnung UBL generated
 -> status and audit evidence stored
 
 <span class="ok">RESULT workflow_ready</span>
 document_url /v1/invoices/inv_123/document
+document_sha256 9b1f...e7c4
+
+<strong>POST</strong> /v1/invoices/inv_123/official-validate
+<span class="ok">RESULT validator_passed</span>
 
 <span class="purple">AUDIT</span>
 invoice_received
 validation_passed
 transformed
-document_hash 9b1f...e7c4</pre>
+official_validation_passed</pre>
               </div>
               <div class="mockup-footer">
-                <div class="metric"><b>1</b><span class="muted">workflow layer</span></div>
-                <div class="metric"><b>5</b><span class="muted">country profiles</span></div>
+                <div class="metric"><b>1</b><span class="muted">Germany focus</span></div>
+                <div class="metric"><b>5</b><span class="muted">country paths</span></div>
                 <div class="metric"><b>0</b><span class="muted">ERP migrations</span></div>
               </div>
             </div>
@@ -975,10 +979,10 @@ document_hash 9b1f...e7c4</pre>
           <div class="container">
             <div class="section-head">
               <div class="eyebrow">The problem</div>
-              <h2 class="section-title">E-invoicing mandates are becoming <em>billing product work.</em></h2>
+              <h2 class="section-title">Germany e-invoicing is becoming <em>billing product work.</em></h2>
               <p class="section-copy">
-                The hard part is not creating another invoice. It is catching country-specific mistakes before they
-                block payment, routing each invoice through the right path, and proving what happened later.
+                The hard part is not creating another invoice. It is proving the invoice data is valid, generating
+                the right structured file, and showing finance what happened after the invoice left billing.
               </p>
             </div>
             <div class="process-grid">
@@ -986,7 +990,7 @@ document_hash 9b1f...e7c4</pre>
                 <div class="step-num">01</div>
                 <div class="icon-box">PDF</div>
                 <h3>PDF workflows stop being enough</h3>
-                <p>Customers, governments, and networks increasingly expect structured invoice data, routing identifiers, validation results, and machine-readable status.</p>
+                <p>Customers increasingly expect structured invoice data, business references, validation results, and machine-readable status.</p>
               </article>
               <article class="card">
                 <div class="step-num">02</div>
@@ -997,8 +1001,8 @@ document_hash 9b1f...e7c4</pre>
               <article class="card">
                 <div class="step-num">03</div>
                 <div class="icon-box">EU</div>
-                <h3>Every country adds a new exception</h3>
-                <p>Belgium, Germany, Poland, Romania, and Spain each pull billing teams toward different formats, networks, evidence, and rollout timelines.</p>
+                <h3>Germany is the first workflow to prove</h3>
+                <p>Start with XRechnung validation and evidence, then reuse the same API boundary for other country workflows later.</p>
               </article>
             </div>
           </div>
@@ -1008,11 +1012,11 @@ document_hash 9b1f...e7c4</pre>
           <div class="container">
             <div class="section-head">
               <div class="eyebrow">The solution</div>
-              <h2 class="section-title">One API between your invoices and <em>country-specific rules.</em></h2>
+              <h2 class="section-title">One API between your invoice JSON and <em>XRechnung evidence.</em></h2>
               <p class="section-copy">
                 Send existing invoice JSON from your ERP, accounting system, billing platform, or marketplace.
-                InvoiceBridge adds mandate awareness, validation, transformation, status tracking, and audit evidence
-                around it.
+                InvoiceBridge validates the Germany workflow, generates XRechnung UBL, records validator evidence,
+                and keeps status and audit history around it.
               </p>
             </div>
             <div class="process-grid">
@@ -1026,13 +1030,13 @@ document_hash 9b1f...e7c4</pre>
                 <div class="step-num">02</div>
                 <div class="icon-box">CHK</div>
                 <h3>Catch mandate-specific issues before send</h3>
-                <p>Validate VAT IDs, routing fields, invoice totals, tax totals, currency, and country profile requirements before they hit a customer or authority.</p>
+                <p>Validate VAT IDs, buyer reference, invoice totals, tax totals, currency, and Germany profile requirements before they hit a customer.</p>
               </article>
               <article class="card">
                 <div class="step-num">03</div>
                 <div class="icon-box">LOG</div>
                 <h3>Give finance an answer when they ask</h3>
-                <p>Track each invoice from received to validated, transformed, submitted or recorded, with status and audit evidence attached.</p>
+                <p>Track each invoice from received to validated, transformed, validator-checked, submitted or recorded, with status and audit evidence attached.</p>
               </article>
             </div>
           </div>
@@ -1042,17 +1046,21 @@ document_hash 9b1f...e7c4</pre>
           <div class="container">
             <div class="section-head">
               <div class="eyebrow">Country workflows</div>
-              <h2 class="section-title">Country-specific workflows, <em>one integration pattern.</em></h2>
+              <h2 class="section-title">Start with Germany. <em>Keep the country model extensible.</em></h2>
               <p class="section-copy">
-                Whether you support one market or many, each mandate creates a different operational problem.
-                InvoiceBridge keeps the workflow consistent: check the requirement, validate the invoice, create
-                structured output, track status, and keep evidence.
+                The first credible paid workflow is Germany XRechnung validation and evidence. Other country cards
+                show how the same API boundary expands without turning the billing system into a compliance rewrite.
               </p>
             </div>
 
             <div class="country-shell">
               <div class="country-picker" role="tablist" aria-label="Country mandate options">
-                <button class="country-button active" type="button" role="tab" aria-selected="true" data-country="BE">
+                <button class="country-button active" type="button" role="tab" aria-selected="true" data-country="DE">
+                  <span>DE</span>
+                  <strong>Germany</strong>
+                  <small>Validation-gated</small>
+                </button>
+                <button class="country-button" type="button" role="tab" aria-selected="false" data-country="BE">
                   <span>BE</span>
                   <strong>Belgium</strong>
                   <small>Coming soon</small>
@@ -1066,11 +1074,6 @@ document_hash 9b1f...e7c4</pre>
                   <span>FR</span>
                   <strong>France</strong>
                   <small>PDP roadmap</small>
-                </button>
-                <button class="country-button" type="button" role="tab" aria-selected="false" data-country="DE">
-                  <span>DE</span>
-                  <strong>Germany</strong>
-                  <small>Validation-gated</small>
                 </button>
                 <button class="country-button" type="button" role="tab" aria-selected="false" data-country="IT">
                   <span>IT</span>
@@ -1092,13 +1095,13 @@ document_hash 9b1f...e7c4</pre>
               <article class="country-panel" aria-live="polite">
                 <div class="country-panel-top">
                   <div>
-                    <div class="plan-name" id="country-status">Legal production support coming soon</div>
-                    <h3 id="country-title">Belgium B2B Peppol</h3>
+                    <div class="plan-name" id="country-status">Usable only when official validation passes</div>
+                    <h3 id="country-title">Germany EN 16931 e-invoices</h3>
                   </div>
                   <a
                     class="source-link"
                     id="country-source"
-                    href="https://einvoice.belgium.be/en/article/when-e-invoicing-mandatory"
+                    href="https://e-rechnung-bund.de/e-rechnung/e-rechnung-zwischen-unternehmen-b2b/"
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -1109,39 +1112,39 @@ document_hash 9b1f...e7c4</pre>
                 <div class="country-meta-grid">
                   <div class="country-meta">
                     <span>Mandate snapshot</span>
-                    <strong id="country-mandate">Mandatory from January 1, 2026 for nearly all Belgian VAT-liable B2B transactions.</strong>
+                    <strong id="country-mandate">Domestic B2B e-invoicing started from January 1, 2025 with transitional rules and EN 16931-compatible structured formats.</strong>
                   </div>
                   <div class="country-meta">
                     <span>Network or channel</span>
-                    <strong id="country-network">Peppol-style network routing</strong>
+                    <strong id="country-network">Customer-managed delivery, not central clearance</strong>
                   </div>
                   <div class="country-meta">
                     <span>Format direction</span>
-                    <strong id="country-format">EN 16931 / Peppol BIS Billing 3.0 UBL-style XML</strong>
+                    <strong id="country-format">XRechnung 3.0 UBL XML</strong>
                   </div>
                 </div>
 
                 <div class="country-block">
                   <span>The pain</span>
                   <p id="country-pain">
-                    PDF and email workflows do not solve structured B2B exchange. Platforms need buyer routing IDs,
-                    tax-total validation, delivery status, and evidence without replacing the billing system.
+                    Germany creates receiving-readiness and mixed-format pressure. Sellers need to know whether an
+                    invoice is actually structured and valid, not merely a PDF attachment.
                   </p>
                 </div>
 
                 <div class="country-block">
                   <span>What InvoiceBridge gives you</span>
                   <p id="country-solution">
-                    InvoiceBridge gives product teams a reusable Belgium workflow shape: mandate lookup, buyer routing
-                    checks, VAT and total validation, structured XML output, status tracking, and audit evidence.
+                    InvoiceBridge turns existing invoice JSON into XRechnung 3.0 UBL, supports local KoSIT validation,
+                    records customer-managed delivery status, and keeps audit evidence for each invoice.
                   </p>
                 </div>
 
                 <ul class="country-solves" id="country-solves">
-                  <li>Mandate check endpoint for Belgium B2B</li>
-                  <li>Buyer routing ID and VAT ID validation</li>
-                  <li>Structured XML transformation</li>
-                  <li>Mock provider status and audit trail</li>
+                  <li>Mandate check endpoint for Germany B2B</li>
+                  <li>German VAT ID checksum and VAT-rate validation</li>
+                  <li>XRechnung 3.0 UBL transformation</li>
+                  <li>Official validator result storage and audit trail</li>
                 </ul>
               </article>
             </div>
@@ -1149,7 +1152,7 @@ document_hash 9b1f...e7c4</pre>
             <p class="country-footnote">
               Snapshot as of May 19, 2026. Country rules need legal review before production. Germany is usable
               only when official XRechnung validation passes. Legal production support for Belgium, Poland,
-              Romania, and Spain is coming soon. The other country cards show planned work.
+              Romania, and Spain is coming soon. France and Italy are roadmap cards only.
             </p>
           </div>
         </section>
@@ -1248,9 +1251,9 @@ No secrets in code</pre>
               <div class="eyebrow">Pricing</div>
               <h2 class="section-title">Pay for the workflow, <em>not a billing-system rebuild.</em></h2>
               <p class="section-copy">
-                Start by proving the invoice flow locally. Move into paid tiers when you need higher volume,
-                audit retention, integration support, and country rollout planning. Billing and metering are not
-                implemented in this repository yet.
+                Start by proving the Germany workflow locally. Move into a paid pilot when you want help mapping real
+                invoice payloads, storing validation evidence, and preparing a production rollout. Pilot access is
+                manual while hosted billing and usage metering are coming soon.
               </p>
             </div>
             <div class="pricing-grid">
@@ -1260,44 +1263,31 @@ No secrets in code</pre>
                 <p>For teams proving the workflow with real invoice examples.</p>
                 <ul class="feature-list">
                   <li>Local/demo use</li>
-                  <li>Belgium, Germany, Poland, Romania, Spain profiles</li>
-                  <li>Validation and transform</li>
-                  <li>Mock send or local evidence</li>
+                  <li>Germany sample workflow</li>
+                  <li>Validation, transform, official-validator hook</li>
+                  <li>Status and audit trail</li>
                   <li>OpenAPI docs</li>
                 </ul>
-                <a class="button secondary" href="https://github.com/manynames3/invoicebridge-api">Start free</a>
+                <a class="button secondary" href="https://github.com/manynames3/invoicebridge-api#try-the-germany-workflow">Run local demo</a>
               </article>
               <article class="card price-card featured">
-                <div class="badge">Most popular</div>
-                <div class="plan-name">Launch</div>
-                <div class="price">$249 <small>/month</small></div>
-                <p>For teams adding validation, transformation, and audit evidence to a product workflow.</p>
+                <div class="badge">First paid offer</div>
+                <div class="plan-name">Germany Pilot</div>
+                <div class="price">$1.5k+ <small>/month</small></div>
+                <p>For teams validating real Germany invoice payloads before a production rollout.</p>
                 <ul class="feature-list">
-                  <li>5,000 workflows/month</li>
-                  <li>API key access</li>
-                  <li>Audit trail</li>
-                  <li>Idempotency</li>
-                  <li>Email support</li>
+                  <li>Germany XRechnung workflow support</li>
+                  <li>Real invoice payload mapping review</li>
+                  <li>Official validator evidence retention</li>
+                  <li>Tenant API key, audit trail, and document hashes</li>
+                  <li>Implementation support</li>
                 </ul>
-                <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#roadmap">Review Launch scope</a>
-              </article>
-              <article class="card price-card">
-                <div class="plan-name">Growth</div>
-                <div class="price">$799 <small>/month</small></div>
-                <p>For platforms rolling out e-invoicing support across more customers and countries.</p>
-                <ul class="feature-list">
-                  <li>25,000 workflows/month</li>
-                  <li>Webhook status events when available</li>
-                  <li>Longer audit retention</li>
-                  <li>Priority support</li>
-                  <li>Integration planning</li>
-                </ul>
-                <a class="button secondary" href="https://github.com/manynames3/invoicebridge-api#roadmap">Review Growth scope</a>
+                <a class="button primary" href="https://github.com/manynames3/invoicebridge-api/issues/new?template=germany-pilot.yml">Discuss Germany pilot</a>
               </article>
               <article class="card price-card">
                 <div class="plan-name">Platform</div>
                 <div class="price">Custom</div>
-                <p>For ERP, marketplace, and multi-country platforms that need custom integration planning.</p>
+                <p>For ERP, marketplace, and multi-country platforms that need custom rollout planning.</p>
                 <ul class="feature-list">
                   <li>Custom volume</li>
                   <li>Provider integration planning</li>
@@ -1323,24 +1313,23 @@ No secrets in code</pre>
                   <tr>
                     <th>Feature</th>
                     <th>Evaluate</th>
-                    <th>Launch</th>
-                    <th>Growth</th>
+                    <th>Germany Pilot</th>
                     <th>Platform</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td>Monthly invoice workflows</td><td>Demo/local</td><td class="gold">5,000</td><td>25,000</td><td>Custom</td></tr>
-                  <tr><td>Belgium B2B profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>Official integration planned</td><td>Custom official</td></tr>
-                  <tr><td>Germany XRechnung no-network path</td><td>Validation-gated</td><td class="gold">Validation-gated</td><td>Validator-gated</td><td>Custom review</td></tr>
-                  <tr><td>Poland KSeF profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>Official integration planned</td><td>Custom official</td></tr>
-                  <tr><td>Romania RO e-Factura profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>Official integration planned</td><td>Custom official</td></tr>
-                  <tr><td>Spain SIF profile</td><td>Coming soon</td><td class="gold">Coming soon</td><td>External blockers</td><td>Custom review</td></tr>
-                  <tr><td>Structured transforms</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
-                  <tr><td>Mock provider outcomes</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
-                  <tr><td>Audit trail</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td><td>Yes</td></tr>
-                  <tr><td>Webhook delivery</td><td>No</td><td class="gold">Planned</td><td>Planned</td><td>Custom</td></tr>
-                  <tr><td>Real Peppol/provider integrations</td><td>No</td><td class="gold">No</td><td>Planned</td><td>Custom integration</td></tr>
-                  <tr><td>Support</td><td>Docs</td><td class="gold">Email</td><td>Priority</td><td>Custom</td></tr>
+                  <tr><td>Monthly invoice workflows</td><td>Demo/local</td><td class="gold">Pilot-scoped</td><td>Custom</td></tr>
+                  <tr><td>Germany XRechnung workflow</td><td>Validation-gated</td><td class="gold">Validation-gated with support</td><td>Custom review</td></tr>
+                  <tr><td>Official validator result storage</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td></tr>
+                  <tr><td>Belgium, Poland, Romania, Spain</td><td>Coming soon</td><td class="gold">Roadmap planning</td><td>Custom official work</td></tr>
+                  <tr><td>Structured transforms</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td></tr>
+                  <tr><td>Mock provider outcomes</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td></tr>
+                  <tr><td>Tenant-scoped API keys</td><td>Yes</td><td class="gold">Yes</td><td>Custom account model</td></tr>
+                  <tr><td>Audit trail</td><td>Yes</td><td class="gold">Yes</td><td>Yes</td></tr>
+                  <tr><td>Archive/redact invoice data</td><td>Yes</td><td class="gold">Yes</td><td>Policy-based retention</td></tr>
+                  <tr><td>Webhook delivery</td><td>No</td><td class="gold">Planned</td><td>Custom</td></tr>
+                  <tr><td>Real provider integrations</td><td>No</td><td class="gold">Planned after pilot</td><td>Custom integration</td></tr>
+                  <tr><td>Support</td><td>Docs</td><td class="gold">Implementation support</td><td>Custom</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1356,11 +1345,11 @@ No secrets in code</pre>
             <div class="faq-grid">
               <article class="card">
                 <h3>Is this production-certified?</h3>
-                <p>No. Germany is usable only after official validation passes. Legal production support for the other implemented countries is coming soon, and none are certified Peppol, KSeF, RO e-Factura, AEAT, or VERI*FACTU integrations.</p>
+                <p>No. Germany is usable only after official XRechnung validation passes for the generated document. Legal production support for the other implemented countries is coming soon.</p>
               </article>
               <article class="card">
                 <h3>Who is this for?</h3>
-                <p>ERP systems, accounting SaaS, billing platforms, B2B marketplaces, and cross-border sellers that need e-invoicing workflows without replacing invoicing.</p>
+                <p>ERP systems, accounting SaaS, billing platforms, and B2B marketplaces that already produce invoice data and need a Germany-first compliance workflow layer.</p>
               </article>
               <article class="card">
                 <h3>Why not just generate PDFs?</h3>
@@ -1370,16 +1359,24 @@ No secrets in code</pre>
                 <h3>Can customers keep their current system?</h3>
                 <p>Yes. The product is designed to sit between existing invoice JSON and country workflows, so billing teams do not have to start with a replacement project.</p>
               </article>
+              <article class="card">
+                <h3>Does this store invoice data?</h3>
+                <p>Yes. The API stores invoice payloads, transformed XML, validation results, and audit events. Tenant API keys scope access, and invoices can be archived with payload/XML redaction while preserving audit hashes.</p>
+              </article>
+              <article class="card">
+                <h3>What makes this different from a script?</h3>
+                <p>The value is the repeatable workflow around validation, idempotency, status, document hashes, and audit evidence, not just XML generation.</p>
+              </article>
             </div>
           </div>
         </section>
 
         <div class="container">
           <section class="cta-band">
-            <h2 class="cta-title">Start de-risking mandates <em>before they become billing rewrites.</em></h2>
-            <p>Use your existing invoice JSON to validate country requirements, produce structured outputs, track status, and keep audit evidence.</p>
+            <h2 class="cta-title">Prove the Germany workflow <em>before rebuilding billing.</em></h2>
+            <p>Use your existing invoice JSON to validate XRechnung requirements, produce structured XML, run official validation, and keep audit evidence.</p>
             <div class="hero-actions" style="justify-content: center">
-              <a class="button primary" href="#countries">Review country workflows</a>
+              <a class="button primary" href="https://github.com/manynames3/invoicebridge-api#try-the-germany-workflow">Run Germany demo</a>
               <a class="button secondary" href="https://github.com/manynames3/invoicebridge-api#local-setup">Run locally</a>
             </div>
           </section>
@@ -1389,7 +1386,7 @@ No secrets in code</pre>
       <footer class="footer">
         <div class="container footer-inner">
           <span>InvoiceBridge API</span>
-          <span>MVP. Germany is validation-gated; legal production support for other implemented countries is coming soon.</span>
+          <span>Germany-first MVP. Other country workflows are coming soon.</span>
         </div>
       </footer>
     </div>
@@ -1470,6 +1467,7 @@ No secrets in code</pre>
             "German VAT ID checksum and VAT-rate validation",
             "XRechnung 3.0 UBL transformation",
             "Local KoSIT validator setup without paid provider cost",
+            "Official validator result storage with document hashes",
             "Customer-managed delivery mock status and audit trail",
           ],
           sourceLabel: "Official German source",

@@ -82,10 +82,10 @@ More detail is in [multi_region.md](multi_region.md) and [cloud_deployment_patte
 ## Runtime Flow
 
 1. Client sends normalized invoice JSON to `/v1/invoices/validate`, `/transform`, or `/send`.
-2. API key middleware protects `/v1` routes and request middleware attaches an `X-Request-ID`.
+2. API key middleware protects `/v1` routes, resolves admin or tenant-scoped credentials, and request middleware attaches an `X-Request-ID`.
 3. `InvoiceService` selects the validator through `validation/registry.py`.
 4. The selected validator checks required fields, country-specific VAT/tax ID syntax and checksums where implemented, routing requirements when applicable, currency, VAT rates, line amounts, tax totals, and payable total consistency.
-5. If `tenant_id` is supplied, the service checks the tenant home/failover region before creating invoice records.
+5. If a tenant API key is used, invoice writes are scoped to that tenant. If `tenant_id` is supplied, the service checks the tenant home/failover region before creating invoice records.
 6. On validation failure, the service records an invoice record plus `invoice_received` and `validation_failed` audit events.
 7. On validation success, the transformer registry selects `UBLLikeTransformer` for Belgium/Romania, `XRechnungUBLTransformer` for Germany, `KSeFLikeTransformer` for Poland, or `FiscalRecordTransformer` for Spain local SIF records.
 8. Spain SIF output delegates official-field hashing, AEAT-shaped XML generation, QR payload construction, and declaration draft data to `app/services/spain_sif.py`.
@@ -96,9 +96,10 @@ More detail is in [multi_region.md](multi_region.md) and [cloud_deployment_patte
 13. `/send` resolves an existing invoice or first transforms a payload, then uses the configured mock provider through the provider registry.
 14. Provider responses include provider metadata, update invoice delivery status, and create `submitted`, `accepted`, `rejected`, `pending`, or `retried` audit events.
 15. `/v1/compliance/production-readiness` returns explicit blockers for no-paid-network production use.
-16. `/{invoice_id}/official-validate` runs the configured official validator command and never reports success when no validator is configured.
+16. `/{invoice_id}/official-validate` runs the configured official validator command, persists the validator result with the document SHA-256, and never reports success when no validator is configured.
 17. `/v1/invoices/{invoice_id}/spain/responsible-declaration` returns a draft evidence object for the producer declaration.
 18. `/status/{invoice_id}` and `/{invoice_id}/audit-trail` expose operational state, tenant ID, processing region, and chronological evidence.
+19. `/v1/invoices/{invoice_id}/archive` marks the invoice archived and can redact stored payload/XML while preserving audit hashes.
 
 ## Deployment Shape
 
@@ -118,9 +119,9 @@ A local multi-region simulation is available through `docker-compose.multi-regio
 - Germany XML is generated as XRechnung 3.0 UBL and must pass the configured KoSIT validator before production reliance; Spain output is AEAT-shaped `RegFactuSistemaFacturacion` XML with required local SIF producer/software identity, `RegistroAlta` hash fields, event-log metadata, hash-chain, tax-breakdown, and QR payload draft data but is not AEAT-certified; other country XML remains evaluation-only output.
 - Providers are deterministic mock providers, not certified access points, KSeF submissions, ANAF/SPV submissions, or Spanish SIF certification.
 - Production readiness is guarded by configuration checks and official-validator command hooks, but the repository cannot supply customer credentials, legal review, or authority certification.
-- The API currently has static country profiles and lightweight tenant routing metadata, not a full tenant auth/account model.
+- The API has tenant-scoped API keys and lightweight tenant routing metadata, not a full account-management or billing model.
 - Region awareness is application-level only; real production multi-region still needs managed database replication, global load balancing, secrets, observability, and tested failover.
-- API key auth is intentionally basic for the MVP.
+- API key auth is intentionally simple for the MVP; production should add key rotation, expiration, per-key permissions, and secret-management controls.
 - Payload size enforcement relies on `Content-Length`; production should also enforce streamed body limits upstream.
 - Audit hashes support integrity checks but are not a full non-repudiation or legal archiving system.
 

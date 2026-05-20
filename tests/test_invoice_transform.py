@@ -37,6 +37,21 @@ def test_transform_idempotency_replays_existing_invoice(
     assert first.json()["invoice_id"] == second.json()["invoice_id"]
 
 
+def test_transform_idempotency_rejects_different_payload(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    valid_invoice: dict,
+) -> None:
+    headers = {**auth_headers, "Idempotency-Key": "transform-key-mismatch"}
+    first = client.post("/v1/invoices/transform", json=valid_invoice, headers=headers)
+    changed_invoice = {**valid_invoice, "invoice_number": "INV-BE-2026-CHANGED"}
+    second = client.post("/v1/invoices/transform", json=changed_invoice, headers=headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 409
+    assert second.json()["detail"]["code"] == "IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST"
+
+
 def test_transform_invalid_invoice_returns_422_validation(
     client: TestClient,
     auth_headers: dict[str, str],

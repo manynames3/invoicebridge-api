@@ -37,7 +37,8 @@ app = FastAPI(
     description=(
         "MVP API for validating normalized invoice JSON, transforming it into structured invoice "
         "outputs, simulating Peppol-style, customer-managed, government-platform, or local fiscal-record "
-        "routing, tracking status, exporting documents, and storing audit trails. This is not a "
+        "routing, tracking status, exporting documents, enforcing tenant-scoped API keys, redacting "
+        "archived invoice payloads, and storing audit trails. This is not a "
         "production-certified Peppol, KSeF, RO e-Factura, VERI*FACTU, or tax-authority submission service."
     ),
     version="0.1.0",

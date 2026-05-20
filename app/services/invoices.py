@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -8,10 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.core.logging import mask_identifier
 from app.core.regions import accepts_regional_writes, current_region
-from app.db.models import AuditEvent, Invoice, InvoiceSubmission, Tenant, ValidationResult
+from app.core.security import AuthContext
+from app.db.models import AuditEvent, Invoice, InvoiceSubmission, OfficialValidationResult, Tenant, ValidationResult
 from app.schemas.audit import AuditEventResponse, AuditTrailResponse
 from app.schemas.compliance import OfficialValidationResponse, SpanishSIFResponsibleDeclarationResponse
 from app.schemas.invoice import (
+    ArchiveInvoiceRequest,
+    ArchiveInvoiceResponse,
     CreateInvoiceRequest,
     InvoiceStatusResponse,
     InvoiceTotals,
@@ -43,6 +46,21 @@ def model_payload(invoice: NormalizedInvoiceInput) -> dict[str, Any]:
     return invoice.model_dump(mode="json", exclude_none=True)
 
 
+def idempotent_invoice_payload(invoice: NormalizedInvoiceInput) -> dict[str, Any]:
+    payload = model_payload(invoice)
+    payload.pop("idempotency_key", None)
+    return payload
+
+
+def idempotent_send_payload(request: SendInvoiceRequest) -> dict[str, Any]:
+    payload = request.model_dump(mode="json", exclude_none=True)
+    payload.pop("idempotency_key", None)
+    nested_invoice = payload.get("invoice")
+    if isinstance(nested_invoice, dict):
+        nested_invoice.pop("idempotency_key", None)
+    return payload
+
+
 def validation_payload(validation: InvoiceValidationResponse) -> dict[str, Any]:
     return validation.model_dump(mode="json")
 
@@ -60,11 +78,13 @@ def idempotency_value(header_key: str | None, body_key: str | None) -> str | Non
 
 
 class InvoiceService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, auth_context: AuthContext | None = None) -> None:
         self.db = db
         self.processing_region = current_region()
+        self.auth_context = auth_context or AuthContext(auth_type="admin")
 
     def validate(self, invoice: NormalizedInvoiceInput) -> InvoiceValidationResponse:
+        invoice = self._tenant_scoped_invoice(invoice)
         return get_validator_for_invoice(invoice).validate(invoice)
 
     def transform(
@@ -73,11 +93,19 @@ class InvoiceService:
         *,
         idempotency_key: str | None = None,
     ) -> TransformInvoiceResponse | InvoiceValidationResponse:
+        invoice = self._tenant_scoped_invoice(invoice)
         key = idempotency_value(idempotency_key, invoice.idempotency_key)
+        request_hash = (
+            stable_payload_hash({"operation": "transform", "invoice": idempotent_invoice_payload(invoice)})
+            if key
+            else None
+        )
         if key:
             existing = self.db.scalar(select(Invoice).where(Invoice.idempotency_key == key))
             if existing:
+                self._ensure_invoice_access(existing)
                 self._ensure_idempotency_tenant_matches(existing, invoice.tenant_id)
+                self._ensure_idempotency_hash_matches(existing.idempotency_request_hash, request_hash)
                 if existing.validation_status == "failed":
                     return self._validation_response_from_invoice(existing)
                 return self._transform_response_from_invoice(existing)
@@ -92,6 +120,7 @@ class InvoiceService:
                 validation,
                 tenant=tenant,
                 idempotency_key=key,
+                idempotency_request_hash=request_hash,
             )
             return self._validation_response_with_audit(
                 validation,
@@ -125,6 +154,7 @@ class InvoiceService:
             required_format=validation.required_format,
             processing_region=self.processing_region,
             idempotency_key=key,
+            idempotency_request_hash=request_hash,
             original_payload=model_payload(invoice),
             transformed_xml=xml,
             validation_result=validation_payload(validation),
@@ -219,11 +249,20 @@ class InvoiceService:
     ) -> SendInvoiceResponse | InvoiceValidationResponse:
         key = idempotency_value(idempotency_key, request.idempotency_key)
         self._validate_send_request_shape(request)
+        request_hash = (
+            stable_payload_hash(
+                {"operation": "send", "request": idempotent_send_payload(request)}
+            )
+            if key
+            else None
+        )
         if key:
             existing_submission = self.db.scalar(
                 select(InvoiceSubmission).where(InvoiceSubmission.idempotency_key == key)
             )
             if existing_submission:
+                self._ensure_invoice_access(existing_submission.invoice)
+                self._ensure_idempotency_hash_matches(existing_submission.idempotency_request_hash, request_hash)
                 return self._send_response_from_submission(existing_submission)
 
         invoice = self._resolve_invoice_for_send(request, key)
@@ -270,6 +309,7 @@ class InvoiceService:
             rejection_reason=result.rejection_reason,
             processing_region=self.processing_region,
             idempotency_key=key,
+            idempotency_request_hash=request_hash,
             request_payload={"invoice_id": invoice.id},
             response_payload=result.response_payload,
         )
@@ -309,6 +349,7 @@ class InvoiceService:
 
     def status(self, invoice_id: str) -> InvoiceStatusResponse:
         invoice = self._get_invoice(invoice_id)
+        official_validation = self._latest_official_validation(invoice.id)
         return InvoiceStatusResponse(
             invoice_id=invoice.id,
             tenant_id=invoice.tenant_id,
@@ -316,6 +357,10 @@ class InvoiceService:
             validation_status=invoice.validation_status,
             delivery_status=invoice.delivery_status,
             provider_reference=invoice.provider_reference,
+            official_validation_status=self._official_validation_status(official_validation),
+            official_validation_result_id=official_validation.id if official_validation else None,
+            official_validation_checked_at=official_validation.created_at if official_validation else None,
+            official_validation_document_sha256=official_validation.document_sha256 if official_validation else None,
             processing_region=invoice.processing_region,
             created_at=invoice.created_at,
             updated_at=invoice.updated_at,
@@ -361,7 +406,43 @@ class InvoiceService:
                     "message": "Official validation requires a successfully transformed XML document.",
                 },
             )
-        return validate_official_document(invoice, invoice.transformed_xml)
+        result = validate_official_document(invoice, invoice.transformed_xml)
+        document_hash = stable_payload_hash(invoice.transformed_xml)
+        validation_record = OfficialValidationResult(
+            invoice_id=invoice.id,
+            country=result.country,
+            required_format=result.required_format,
+            validator_name=result.validator_name,
+            configured=result.configured,
+            passed=result.passed,
+            exit_code=result.exit_code,
+            message=result.message,
+            stdout_excerpt=result.stdout_excerpt,
+            stderr_excerpt=result.stderr_excerpt,
+            document_sha256=document_hash,
+            processing_region=self.processing_region,
+        )
+        self.db.add(validation_record)
+        event_type = "official_validation_passed" if result.passed else "official_validation_failed"
+        if not result.configured:
+            event_type = "official_validation_not_configured"
+        create_audit_event(
+            self.db,
+            invoice_id=invoice.id,
+            event_type=event_type,
+            metadata={
+                "validator_name": result.validator_name,
+                "configured": result.configured,
+                "passed": result.passed,
+                "exit_code": result.exit_code,
+                "document_sha256": document_hash,
+            },
+            payload_for_hash=result.model_dump(mode="json"),
+        )
+        self.db.commit()
+        return result.model_copy(
+            update={"validation_result_id": validation_record.id, "document_sha256": document_hash}
+        )
 
     def spain_responsible_declaration(self, invoice_id: str) -> SpanishSIFResponsibleDeclarationResponse:
         invoice = self._get_invoice(invoice_id)
@@ -386,12 +467,65 @@ class InvoiceService:
             external_requirements=draft["external_requirements"],
         )
 
+    def archive(
+        self,
+        invoice_id: str,
+        request: ArchiveInvoiceRequest,
+    ) -> ArchiveInvoiceResponse:
+        invoice = self._get_invoice(invoice_id)
+        self._ensure_writable_region()
+        if invoice.status == "archived":
+            archived_event = self._latest_event(invoice.id, "archived")
+            return ArchiveInvoiceResponse(
+                invoice_id=invoice.id,
+                tenant_id=invoice.tenant_id,
+                status=invoice.status,
+                redacted_payload=bool(invoice.original_payload.get("redacted")),
+                redacted_document=invoice.transformed_xml is None,
+                audit_log_id=archived_event.id if archived_event else "",
+            )
+
+        redacted_document = bool(invoice.transformed_xml and request.redact_payload)
+        evidence = {
+            "invoice_id": invoice.id,
+            "reason": request.reason,
+            "redacted_payload": request.redact_payload,
+            "redacted_document": redacted_document,
+            "original_payload_sha256": stable_payload_hash(invoice.original_payload),
+            "document_sha256": stable_payload_hash(invoice.transformed_xml) if invoice.transformed_xml else None,
+        }
+        archived_event = create_audit_event(
+            self.db,
+            invoice_id=invoice.id,
+            event_type="archived",
+            metadata=evidence,
+            payload_for_hash=evidence,
+        )
+        invoice.status = "archived"
+        if request.redact_payload:
+            invoice.original_payload = {
+                "redacted": True,
+                "redacted_at": datetime.now(UTC).isoformat(),
+                "reason": request.reason,
+            }
+            invoice.transformed_xml = None
+        self.db.commit()
+        return ArchiveInvoiceResponse(
+            invoice_id=invoice.id,
+            tenant_id=invoice.tenant_id,
+            status=invoice.status,
+            redacted_payload=request.redact_payload,
+            redacted_document=redacted_document,
+            audit_log_id=archived_event.id,
+        )
+
     def create_from_scratch(
         self,
         request: CreateInvoiceRequest,
         *,
         idempotency_key: str | None = None,
     ) -> TransformInvoiceResponse | InvoiceValidationResponse:
+        request = self._tenant_scoped_create_request(request)
         lines: list[dict[str, Any]] = []
         tax_exclusive_amount = Decimal("0")
         tax_amount = Decimal("0")
@@ -514,6 +648,36 @@ class InvoiceService:
             )
         return tenant
 
+    def _tenant_scoped_invoice(self, invoice: NormalizedInvoiceInput) -> NormalizedInvoiceInput:
+        if self.auth_context.is_admin:
+            return invoice
+        tenant_id = self.auth_context.tenant_id
+        if invoice.tenant_id and invoice.tenant_id != tenant_id:
+            self._raise_tenant_access_denied()
+        return invoice.model_copy(update={"tenant_id": tenant_id})
+
+    def _tenant_scoped_create_request(self, request: CreateInvoiceRequest) -> CreateInvoiceRequest:
+        if self.auth_context.is_admin:
+            return request
+        tenant_id = self.auth_context.tenant_id
+        if request.tenant_id and request.tenant_id != tenant_id:
+            self._raise_tenant_access_denied()
+        return request.model_copy(update={"tenant_id": tenant_id})
+
+    def _ensure_invoice_access(self, invoice: Invoice) -> None:
+        if self.auth_context.is_admin or invoice.tenant_id == self.auth_context.tenant_id:
+            return
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "INVOICE_NOT_FOUND", "message": "Invoice was not found."},
+        )
+
+    def _raise_tenant_access_denied(self) -> None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "TENANT_ACCESS_DENIED", "message": "API key is not authorized for this tenant."},
+        )
+
     def _ensure_tenant_region(self, tenant: Tenant | None) -> None:
         if tenant is None:
             return
@@ -545,6 +709,17 @@ class InvoiceService:
             },
         )
 
+    def _ensure_idempotency_hash_matches(self, existing_hash: str | None, request_hash: str | None) -> None:
+        if existing_hash is None or existing_hash == request_hash:
+            return
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST",
+                "message": "Idempotency key is already associated with a different request payload.",
+            },
+        )
+
     def _get_invoice(self, invoice_id: str) -> Invoice:
         invoice = self.db.get(Invoice, invoice_id)
         if invoice is None:
@@ -552,6 +727,7 @@ class InvoiceService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail={"code": "INVOICE_NOT_FOUND", "message": "Invoice was not found."},
             )
+        self._ensure_invoice_access(invoice)
         return invoice
 
     def _buyer_routing_id(self, invoice: NormalizedInvoiceInput) -> str | None:
@@ -583,6 +759,7 @@ class InvoiceService:
         *,
         tenant: Tenant | None,
         idempotency_key: str | None,
+        idempotency_request_hash: str | None,
     ) -> tuple[Invoice, AuditEvent]:
         db_invoice = Invoice(
             tenant_id=tenant.id if tenant else None,
@@ -598,6 +775,7 @@ class InvoiceService:
             required_format=validation.required_format,
             processing_region=self.processing_region,
             idempotency_key=idempotency_key,
+            idempotency_request_hash=idempotency_request_hash,
             original_payload=model_payload(invoice),
             transformed_xml=None,
             validation_result=validation_payload(validation),
@@ -683,6 +861,20 @@ class InvoiceService:
             .where(InvoiceSubmission.invoice_id == invoice_id)
             .order_by(InvoiceSubmission.created_at.desc())
         )
+
+    def _latest_official_validation(self, invoice_id: str) -> OfficialValidationResult | None:
+        return self.db.scalar(
+            select(OfficialValidationResult)
+            .where(OfficialValidationResult.invoice_id == invoice_id)
+            .order_by(OfficialValidationResult.created_at.desc())
+        )
+
+    def _official_validation_status(self, validation: OfficialValidationResult | None) -> str:
+        if validation is None:
+            return "not_run"
+        if not validation.configured:
+            return "not_configured"
+        return "passed" if validation.passed else "failed"
 
     def _latest_event(self, invoice_id: str, event_type: str) -> AuditEvent | None:
         return self.db.scalar(

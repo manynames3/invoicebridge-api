@@ -167,4 +167,4 @@ The repository now has application-level region awareness and a local multi-regi
 - secrets stored in a cloud secret manager per region,
 - centralized logs/metrics/traces,
 - backup, restore, and disaster-recovery tests,
-- production-grade tenant authentication and authorization boundaries.
+- production-grade account management, API-key rotation, per-key permissions, and centralized identity controls.

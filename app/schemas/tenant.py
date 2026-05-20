@@ -25,6 +25,11 @@ class TenantResponse(BaseModel):
     updated_at: datetime
 
 
+class TenantCreateResponse(TenantResponse):
+    api_key: str
+    api_key_prefix: str
+
+
 class TenantRegionDecisionResponse(BaseModel):
     tenant_id: str
     current_region: str

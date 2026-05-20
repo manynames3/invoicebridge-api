@@ -1,0 +1,60 @@
+name: Germany XRechnung pilot
+description: Request an assisted InvoiceBridge API pilot for Germany invoice workflow validation.
+title: "Germany XRechnung pilot request"
+labels: ["pilot", "germany", "xrechnung"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for a practical pilot discussion. Do not paste sensitive production invoice data into a public issue.
+  - type: input
+    id: company
+    attributes:
+      label: Company / product
+      description: What system produces the invoices today?
+      placeholder: "ERP, accounting SaaS, marketplace, billing platform..."
+    validations:
+      required: true
+  - type: textarea
+    id: current-workflow
+    attributes:
+      label: Current invoice workflow
+      description: Briefly describe how Germany invoices are created, validated, delivered, and archived today.
+    validations:
+      required: true
+  - type: dropdown
+    id: monthly-volume
+    attributes:
+      label: Monthly Germany invoice volume
+      options:
+        - "Under 1,000"
+        - "1,000 - 10,000"
+        - "10,000 - 100,000"
+        - "100,000+"
+    validations:
+      required: true
+  - type: textarea
+    id: pain
+    attributes:
+      label: Biggest pain
+      description: What problem are you trying to remove?
+      placeholder: "Manual XML checks, unclear XRechnung errors, audit evidence, ERP changes, customer rejections..."
+    validations:
+      required: true
+  - type: textarea
+    id: sample-shape
+    attributes:
+      label: Sample payload shape
+      description: Describe the invoice JSON shape or fields you can share safely. Do not include live customer data.
+    validations:
+      required: false
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Pilot readiness
+      options:
+        - label: We can provide sanitized sample invoices.
+        - label: We can run a local Docker/API demo.
+        - label: We need help mapping existing invoice JSON to the normalized input schema.
+        - label: We need official XRechnung validation evidence for each generated document.
+

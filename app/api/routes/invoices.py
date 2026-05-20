@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 
+from app.core.security import current_auth_context
 from app.db.session import get_db
 from app.schemas.audit import AuditTrailResponse
 from app.schemas.compliance import OfficialValidationResponse, SpanishSIFResponsibleDeclarationResponse
 from app.schemas.invoice import (
+    ArchiveInvoiceRequest,
+    ArchiveInvoiceResponse,
     CreateInvoiceRequest,
     InvoiceStatusResponse,
     NormalizedInvoiceInput,
@@ -19,8 +22,8 @@ from app.services.invoices import InvoiceService
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
 
-def service(db: Session = Depends(get_db)) -> InvoiceService:
-    return InvoiceService(db)
+def service(request: Request, db: Session = Depends(get_db)) -> InvoiceService:
+    return InvoiceService(db, auth_context=current_auth_context(request))
 
 
 @router.post(
@@ -140,6 +143,23 @@ def spain_responsible_declaration(
     invoice_service: InvoiceService = Depends(service),
 ) -> SpanishSIFResponsibleDeclarationResponse:
     return invoice_service.spain_responsible_declaration(invoice_id)
+
+
+@router.post(
+    "/{invoice_id}/archive",
+    response_model=ArchiveInvoiceResponse,
+    summary="Archive an invoice and optionally redact stored payloads",
+    description=(
+        "Marks an invoice archived and, by default, removes the stored original payload and transformed XML while "
+        "preserving audit evidence and payload/document hashes."
+    ),
+)
+def archive_invoice(
+    invoice_id: str,
+    request: ArchiveInvoiceRequest | None = None,
+    invoice_service: InvoiceService = Depends(service),
+) -> ArchiveInvoiceResponse:
+    return invoice_service.archive(invoice_id, request or ArchiveInvoiceRequest())
 
 
 @router.get(
