@@ -1,10 +1,37 @@
 # InvoiceBridge API
 
-InvoiceBridge API helps ERP, accounting SaaS, billing platforms, and B2B marketplaces add e-invoicing validation, structured XML output, status tracking, and audit evidence without replacing the invoice system they already use. The sellable MVP wedge is Germany XRechnung: send existing invoice JSON, validate business rules and totals, generate XRechnung UBL, run an official validator command when configured, and retain invoice-level evidence.
+[![CI](https://github.com/manynames3/invoicebridge-api/actions/workflows/ci.yml/badge.svg)](https://github.com/manynames3/invoicebridge-api/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB)
+![FastAPI](https://img.shields.io/badge/FastAPI-Pydantic%20v2-009688)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Docker%20Compose-4169E1)
 
-This is a Germany-first portfolio MVP, not a certified government submission gateway. Germany is usable only when generated invoices pass official XRechnung validation. Legal production support for Belgium, Poland, Romania, and Spain is coming soon after required access-point, tax-authority, signing, declaration, or conformance work is completed.
+InvoiceBridge API is a Germany-first FastAPI backend that turns existing invoice JSON into validated XRechnung-style structured XML, status records, tenant-scoped workflows, and audit evidence. It is designed as a compliance workflow layer for ERP, accounting SaaS, billing platforms, and B2B marketplaces that need e-invoicing readiness without replacing their billing system.
+
+This is a portfolio-grade MVP, not a certified government submission gateway. Germany is usable only when generated invoices pass official XRechnung validation. Legal production support for Belgium, Poland, Romania, and Spain is coming soon after required access-point, tax-authority, signing, declaration, or conformance work is completed.
 
 Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-api.pages.dev)
+
+## At A Glance
+
+| Area | What to know |
+|---|---|
+| Primary workflow | Invoice JSON -> country/profile validation -> XRechnung/structured XML -> status -> audit trail |
+| First usable country path | Germany B2B XRechnung output with official-validator hook and customer-managed delivery |
+| Intended buyer/user | Billing, ERP, marketplace, and accounting SaaS engineering or finance-ops teams |
+| Backend stack | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy, Alembic, PostgreSQL, Docker |
+| Product credibility | Tenant API keys, idempotency request hashing, official validation evidence, audit hashes, multi-region metadata, CI |
+| Honest boundary | No certified Peppol/tax-authority submission, no legal advice, no self-serve billing yet |
+
+## Reviewer Quick Links
+
+- Product demo path: [examples/germany_demo.sh](examples/germany_demo.sh)
+- Fast technical review path: [docs/reviewer_guide.md](docs/reviewer_guide.md)
+- Architecture overview and C4 diagram: [docs/architecture.md](docs/architecture.md)
+- Live demo talk track: [docs/demo_script.md](docs/demo_script.md)
+- Production readiness guardrails: [docs/production_readiness.md](docs/production_readiness.md)
+- Compliance and operations limitations: [docs/limitations.md](docs/limitations.md)
+- Architecture decision records: [docs/adrs](docs/adrs)
+- Pilot intake template: [.github/ISSUE_TEMPLATE/germany-pilot.yml](.github/ISSUE_TEMPLATE/germany-pilot.yml)
 
 ## Try The Germany Workflow
 
@@ -27,6 +54,7 @@ For local Python development:
 ```bash
 python3 -m pip install -e ".[dev]"
 cp .env.example .env
+docker-compose up -d db
 make run
 ./examples/germany_demo.sh
 ```
