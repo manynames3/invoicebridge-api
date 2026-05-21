@@ -112,6 +112,10 @@ The included single-region deployment model is Docker Compose:
 
 For a production-like deployment, run Alembic migrations explicitly, set `AUTO_CREATE_TABLES=false`, inject secrets through the platform, and put TLS, request body limits, and rate limiting at the edge/gateway as well as in the app.
 
+For hosted demos, Neon Postgres is the preferred low-cost managed database. It is configured only through `DATABASE_URL`; copied Neon `postgresql://` URLs are normalized to the installed `psycopg` SQLAlchemy driver, and `sslmode=require` plus any `channel_binding=require` parameter should remain in the connection string.
+
+For production AWS deployments, RDS PostgreSQL remains the recommended database option when private networking, managed backups, RDS Proxy, AWS compliance controls, and predictable always-on capacity matter.
+
 A local multi-region simulation is available through `docker-compose.multi-region.yml`. It starts two API containers with different region settings and separate PostgreSQL databases on ports `8001` and `8002`.
 
 ## Key Constraints

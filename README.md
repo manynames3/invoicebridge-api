@@ -19,6 +19,7 @@ Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-a
 | First usable country path | Germany B2B XRechnung output with official-validator hook and customer-managed delivery |
 | Intended buyer/user | Billing, ERP, marketplace, and accounting SaaS engineering or finance-ops teams |
 | Backend stack | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy, Alembic, PostgreSQL, Docker |
+| Hosted demo database | Neon Postgres through `DATABASE_URL`; local dev still uses Docker Compose Postgres |
 | Product credibility | Tenant API keys, idempotency request hashing, official validation evidence, audit hashes, multi-region metadata, CI |
 | Honest boundary | No certified Peppol/tax-authority submission, no legal advice, no self-serve billing yet |
 
@@ -28,9 +29,11 @@ Live landing page: [https://invoicebridge-api.pages.dev](https://invoicebridge-a
 - Fast technical review path: [docs/reviewer_guide.md](docs/reviewer_guide.md)
 - Architecture overview and C4 diagram: [docs/architecture.md](docs/architecture.md)
 - Live demo talk track: [docs/demo_script.md](docs/demo_script.md)
+- Neon hosted demo database setup: [docs/neon_demo_database.md](docs/neon_demo_database.md)
 - Production readiness guardrails: [docs/production_readiness.md](docs/production_readiness.md)
 - Compliance and operations limitations: [docs/limitations.md](docs/limitations.md)
 - Architecture decision records: [docs/adrs](docs/adrs)
+- Neon/RDS database decision: [docs/adrs/0011-neon-for-hosted-demos-rds-for-aws-production.md](docs/adrs/0011-neon-for-hosted-demos-rds-for-aws-production.md)
 - Pilot intake template: [.github/ISSUE_TEMPLATE/germany-pilot.yml](.github/ISSUE_TEMPLATE/germany-pilot.yml)
 
 ## Try The Germany Workflow
@@ -426,6 +429,10 @@ The API deployment model included in this repository is Docker Compose:
 - `db`: PostgreSQL 16 with a health check and persistent volume.
 
 For production, the API should run migrations explicitly with Alembic, disable automatic table creation, terminate TLS at the platform edge or gateway, and source secrets from the deployment environment.
+
+For low-cost hosted demos, use Neon Postgres through `DATABASE_URL` and run Alembic migrations before starting the app. Neon is a good fit for intermittent public/portfolio demos because it provides managed Postgres without an always-on database bill. See [docs/neon_demo_database.md](docs/neon_demo_database.md).
+
+For production on AWS, RDS PostgreSQL remains the recommended database option when the API is deployed into a full AWS stack and needs private networking, managed backups, RDS Proxy, compliance controls, and predictable always-on capacity.
 
 For a local multi-region simulation:
 

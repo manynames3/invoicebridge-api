@@ -2,6 +2,12 @@
 
 InvoiceBridge API is designed to be portable across managed container platforms, but the primary architecture target is single-cloud multi-region. Multi-cloud should only be used when a customer, regulator, procurement process, or vendor-risk policy requires it.
 
+## Hosted Demo Database
+
+Neon Postgres is the preferred low-cost hosted database for public and portfolio demos. It keeps the app on managed Postgres while avoiding always-on database cost for intermittent traffic. Configure it with `DATABASE_URL`, keep `sslmode=require` and any `channel_binding=require` parameter Neon provides, and run Alembic migrations before starting the hosted API. Details are in [neon_demo_database.md](neon_demo_database.md).
+
+Neon is a demo/preview-environment fit, not the default AWS production database. RDS PostgreSQL remains appropriate for production when the API is deployed into AWS and needs private networking, managed backups, RDS Proxy, compliance controls, and predictable always-on workloads.
+
 ## AWS Pattern
 
 | Concern | AWS service fit |

@@ -12,3 +12,4 @@ These ADRs capture the main architecture choices for the InvoiceBridge API MVP.
 - [ADR 0008: Model Direct Government Platform Profiles With Mock Boundaries](0008-direct-government-platform-mocks.md)
 - [ADR 0009: Production Readiness Guardrails](0009-production-readiness-guardrails.md)
 - [ADR 0010: Treat Spain SIF As A Readiness Boundary](0010-spain-sif-readiness-boundary.md)
+- [ADR 0011: Use Neon For Hosted Demos And RDS For AWS Production](0011-neon-for-hosted-demos-rds-for-aws-production.md)

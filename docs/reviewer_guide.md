@@ -46,6 +46,7 @@ The strongest current workflow is Germany XRechnung. Other country profiles are 
 - Audit events include payload/document hashes where practical.
 - Archive/redaction endpoint removes stored invoice payload/XML while preserving evidence hashes.
 - Region-aware metadata models tenant home region, failover region, processing region, and standby write protection.
+- Hosted demo database path uses Neon Postgres through `DATABASE_URL`; AWS production docs still point to RDS PostgreSQL.
 - CI runs ruff, mypy, and pytest.
 
 ## What Is Intentionally Not Claimed
@@ -77,6 +78,7 @@ Then show:
 The next phase should stay narrow:
 
 - Hosted demo backend with safe sample data.
+- Neon-backed public demo deployment using migrated Postgres schema.
 - Key rotation and per-key permissions.
 - Real webhook delivery with signed callbacks.
 - Germany-focused onboarding docs for mapping customer invoice JSON to the normalized schema.
