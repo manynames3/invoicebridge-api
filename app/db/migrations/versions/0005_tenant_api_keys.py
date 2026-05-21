@@ -1,7 +1,7 @@
 """add tenant scoped api keys
 
 Revision ID: 0005_tenant_api_keys
-Revises: 0004_idempotency_official_validation
+Revises: 0004_idempotency_official
 Create Date: 2026-05-20
 """
 from collections.abc import Sequence
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0005_tenant_api_keys"
-down_revision: str | None = "0004_idempotency_official_validation"
+down_revision: str | None = "0004_idempotency_official"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -39,4 +39,3 @@ def downgrade() -> None:
     op.drop_index("ix_tenant_api_keys_key_prefix", table_name="tenant_api_keys")
     op.drop_index("ix_tenant_api_keys_tenant_id", table_name="tenant_api_keys")
     op.drop_table("tenant_api_keys")
-

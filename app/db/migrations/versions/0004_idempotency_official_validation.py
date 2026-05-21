@@ -1,6 +1,6 @@
 """add idempotency hashes and official validation results
 
-Revision ID: 0004_idempotency_official_validation
+Revision ID: 0004_idempotency_official
 Revises: 0003_add_region_aware_tenants
 Create Date: 2026-05-20
 """
@@ -9,7 +9,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0004_idempotency_official_validation"
+revision: str = "0004_idempotency_official"
 down_revision: str | None = "0003_add_region_aware_tenants"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
